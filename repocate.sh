@@ -34,7 +34,16 @@ create_container() {
     local dir_path=$(ensure_repo "$repo_url")
     local container_name=$(get_container_name "$repo_url")
     
-    if ! docker ps -a --format '{{.Names}}' | grep -q "^$container_name$"; then
+    if docker ps -a --format '{{.Names}}' | grep -q "^$container_name$"; then
+        log "INFO" "Container $container_name already exists. Checking status..."
+        
+        if docker ps -q -f name="$container_name" > /dev/null; then
+            log "INFO" "Container $container_name is already running."
+        else
+            log "INFO" "Starting existing container $container_name..."
+            docker start "$container_name" > /dev/null || error_exit "Failed to start container"
+        fi
+    else
         log "INFO" "Creating new container $container_name"
         echo -n "Creating container... "
         docker run -d \
@@ -47,17 +56,13 @@ create_container() {
             -e GIT_AUTHOR_EMAIL="$(git config user.email)" \
             -e GIT_COMMITTER_NAME="$(git config user.name)" \
             -e GIT_COMMITTER_EMAIL="$(git config user.email)" \
+            --label "org.label-schema.repo-url=$repo_url" \
+            --label "org.label-schema.creation-date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            --label "org.label-schema.vcs-ref=$(git ls-remote "$repo_url" HEAD | awk '{ print substr($1, 1, 7) }')" \
             --name "$container_name" \
             "$BASE_IMAGE" \
             tail -f /dev/null > /dev/null 2>&1 || error_exit "Failed to create container"
         progress_bar 3 15
-    elif [[ "$(docker ps -q -f name=$container_name)" ]]; then
-        log "INFO" "Container $container_name is already running"
-    else
-        log "INFO" "Starting existing container $container_name"
-        echo -n "Starting container... "
-        docker start "$container_name" > /dev/null || error_exit "Failed to start container"
-        progress_bar 2 10
     fi
     
     echo -n "Entering container... "
@@ -73,7 +78,9 @@ enter_container() {
         log "INFO" "Entering container $container_name"
         docker exec -it "$container_name" /bin/zsh -c "cd /workspace && /bin/zsh" || error_exit "Failed to exec into container"
     else
-        log "WARN" "Container $container_name is not running. Use 'repocate create $repo_url' first."
+        log "WARN" "Container $container_name is not running. Starting container..."
+        docker start "$container_name" > /dev/null || error_exit "Failed to start container"
+        docker exec -it "$container_name" /bin/zsh -c "cd /workspace && /bin/zsh" || error_exit "Failed to exec into container"
     fi
 }
 
@@ -114,6 +121,20 @@ list_containers() {
     docker ps -a --filter "name=repocate-" --format "table ${BLUE}{{.Names}}${RESET}\t${GREEN}{{.Status}}${RESET}\t${YELLOW}{{.Ports}}${RESET}"
 }
 
+# Function to stop all containers
+stop_all_containers() {
+    log "INFO" "Stopping all repocate containers..."
+    docker stop $(docker ps -a -q --filter "name=repocate-") > /dev/null || log "WARN" "No containers found to stop."
+    echo "${GREEN}All containers stopped successfully${RESET}"
+}
+
+# Function to clean up stopped containers
+cleanup_containers() {
+    log "INFO" "Cleaning up all stopped repocate containers..."
+    docker rm $(docker ps -a -q --filter "status=exited" --filter "name=repocate-") > /dev/null || log "WARN" "No stopped containers found to clean up."
+    echo "${GREEN}All stopped containers cleaned up successfully${RESET}"
+}
+
 # Function to show version
 show_version() {
     echo "${GREEN}Repocate version $VERSION${RESET}"
@@ -128,6 +149,8 @@ ${YELLOW}Commands:${RESET}
   ${GREEN}create <repo-url>${RESET}  Clone repo and create/start dev container
   ${GREEN}enter <repo-url>${RESET}   Enter dev container for repo
   ${GREEN}stop <repo-url>${RESET}    Stop dev container for repo
+  ${GREEN}stop-all${RESET}           Stop all repocate containers
+  ${GREEN}cleanup${RESET}            Clean up all stopped repocate containers
   ${GREEN}rebuild <repo-url>${RESET} Rebuild dev container for repo
   ${GREEN}list${RESET}               List all dev containers
   ${GREEN}version${RESET}            Show version information
@@ -154,6 +177,12 @@ case ${1:-} in
         [[ $# -eq 2 ]] || error_exit "The 'stop' command requires a repository URL"
         stop_container "$2"
         ;;
+    stop-all)
+        stop_all_containers
+        ;;
+    cleanup)
+        cleanup_containers
+        ;;
     rebuild)
         [[ $# -eq 2 ]] || error_exit "The 'rebuild' command requires a repository URL"
         rebuild_container "$2"
@@ -168,7 +197,12 @@ case ${1:-} in
         usage
         ;;
     *)
-        usage
-        exit 1
+        # Default behavior: enter the container for the given repo_url
+        if [[ $# -eq 1 ]]; then
+            enter_container "$1"
+        else
+            usage
+            exit 1
+        fi
         ;;
 esac
