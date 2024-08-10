@@ -21,16 +21,16 @@ install: $(SOURCES)
 	install -d $(DESTDIR)$(MANDIR)
 	install -m 644 repocate.1 $(DESTDIR)$(MANDIR)/repocate.1
 
-# Setup environment
+# Setup environment in ~/Repocate directory
 setup_env:
 	@echo "Setting up the Repocate environment..."
 	# Create Repocate directory structure
 	mkdir -p $(REPOCATE_DIR)/.config/zsh
+	mkdir -p $(REPOCATE_DIR)/.config/nvim
 	mkdir -p $(REPOCATE_DIR)/workspace
 	# Move configuration files into Repocate directory
 	mv .zshrc $(REPOCATE_DIR)/.config/zsh/.zshrc || true
 	mv init.vim $(REPOCATE_DIR)/.config/nvim/init.vim || true
-	mv repocate $(REPOCATE_DIR)/workspace/repocate || true
 	@echo "Environment setup complete in $(REPOCATE_DIR)"
 
 # Uninstall binaries and man pages
@@ -39,7 +39,7 @@ uninstall:
 	rm -f $(DESTDIR)$(BINDIR)/repocate-common.sh
 	rm -f $(DESTDIR)$(MANDIR)/repocate.1
 
-# Clean up any temporary files
+# Clean up any temporary files and the Repocate directory
 clean:
 	rm -f $(TARGETS)
 	rm -rf $(REPOCATE_DIR)
