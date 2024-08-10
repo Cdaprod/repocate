@@ -5,6 +5,10 @@ set -euo pipefail
 # Source common functions and variables
 source "$(dirname "$0")/repocate-common.sh"
 
+# Define REPOCATE_WORKSPACE if not set
+REPOCATE_WORKSPACE="${REPOCATE_WORKSPACE:-$HOME/Repocate}"
+mkdir -p "$REPOCATE_WORKSPACE"
+
 # Function to ensure the user is in the Docker group
 ensure_user_in_docker_group() {
     if ! groups $USER | grep -q "\bdocker\b"; then
@@ -83,7 +87,7 @@ init_container() {
     local repo_url=$1
     local repo_name=$(basename "$repo_url" .git)
     local project_dir=$(ensure_repo "$repo_url")
-    local container_name=$(get_container_name "$repo_url")
+    local container_name="repocate-${repo_name}"
     local volume_name="repocate-${repo_name}-vol"
 
     local port_3000=$(find_free_port)  # Find a free port for 3000
@@ -257,6 +261,7 @@ EOF
 
 # Check prerequisites
 check_and_install_prerequisites
+# Other functions (enter_container, stop_container, etc.) remain unchanged
 
 # Main script logic
 case ${1:-} in
