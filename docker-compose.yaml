@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  repocate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "${DOCKERHUB_USERNAME}/repocate:latest"
+    environment:
+      - DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
+      - DOCKERHUB_TOKEN=${DOCKERHUB_TOKEN}
