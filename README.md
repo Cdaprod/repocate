@@ -1,3 +1,5 @@
+[![Build and Cache Repocate](https://github.com/Cdaprod/repocate/actions/workflows/repocate-build.yml/badge.svg)](https://github.com/Cdaprod/repocate/actions/workflows/repocate-build.yml)
+
 <div align="center">
   <img src="public/photo.webp" alt="Repocate Image">
 </div>
