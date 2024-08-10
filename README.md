@@ -20,6 +20,9 @@ So, whether you're a digital nomad hopping between coffee shops or a team lead o
 
 Ready to make your code feel at home anywhere? Let's repocate! 🚀
 
+<div align="center">
+  <img src="public/repocate.jpeg" alt="Repocate Image">
+</div>
 
 ## Features
 

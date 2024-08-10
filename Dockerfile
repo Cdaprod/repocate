@@ -42,13 +42,14 @@ RUN wget https://golang.org/dl/go1.17.linux-amd64.tar.gz \
     && tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz \
     && rm go1.17.linux-amd64.tar.gz
 
-# Install Go tools
+# Install Go tools with detailed steps
 RUN go install github.com/golang/protobuf/protoc-gen-go@latest \
     && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest \
     && go install golang.org/x/tools/gopls@latest \
     && go install github.com/fatih/gomodifytags@latest \
     && go install github.com/cweill/gotests/gotests@latest \
-    && go install github.com/josharian/impl@latest
+    && go install github.com/josharian/impl@latest \
+    || { echo "Go tools installation failed"; exit 1; }
 
 # Install Node.js and npm using nvm
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash \
