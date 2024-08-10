@@ -1,0 +1,69 @@
+.TH REPOCATE 1 "August 2024" "Version 1.2.0" "User Commands"
+.SH NAME
+repocate \- manage repository-specific development environments
+.SH SYNOPSIS
+.B repocate
+.I COMMAND
+[ARGUMENTS]
+.SH DESCRIPTION
+.B repocate
+is a tool for managing isolated development environments for different Git repositories. It uses Docker containers to provide consistent and reproducible environments for each project.
+.SH COMMANDS
+.TP
+.B create <repo-url>
+Clone the repository and create or start a development container for it.
+.TP
+.B enter <repo-url>
+Enter an existing development container for the specified repository.
+.TP
+.B stop <repo-url>
+Stop the development container for the specified repository.
+.TP
+.B rebuild <repo-url>
+Rebuild the development container for the specified repository.
+.TP
+.B list
+List all repocate containers.
+.TP
+.B version
+Show the version of repocate.
+.TP
+.B help
+Show usage information.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Display help message and exit.
+.TP
+.B \-v, \-\-version
+Display version information and exit.
+.SH FILES
+.TP
+.I ~/.config/repocate/config
+Configuration file for repocate.
+.TP
+.I ~/.config/repocate/repocate.log
+Log file for repocate operations.
+.SH ENVIRONMENT
+.TP
+.B REPOCATE_BASE_IMAGE
+Docker image to use for development containers (default: repocate-env).
+.TP
+.B REPOCATE_WORKSPACE_DIR
+Directory to use for cloning repositories (default: ~/repocate-workspaces).
+.SH EXAMPLES
+.TP
+Create a new development environment:
+.B repocate create https://github.com/username/repo.git
+.TP
+Enter an existing development environment:
+.B repocate enter https://github.com/username/repo.git
+.TP
+List all repocate containers:
+.B repocate list
+.SH AUTHOR
+Written by Your Name <your.email@example.com>
+.SH BUGS
+Report bugs to <https://github.com/yourusername/repocate/issues>
+.SH SEE ALSO
+docker(1), git(1)
