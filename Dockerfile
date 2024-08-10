@@ -88,7 +88,10 @@ RUN curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim
 COPY .config/nvim/init.vim /root/.config/nvim/init.vim
 
 # Install Neovim plugins
-RUN nvim --headless +PlugInstall +qall
+RUN nvim --headless +PlugInstall +qall || { echo "Neovim plugin installation failed"; exit 1; }
+
+# Setup cache directory
+RUN mkdir -p /tmp/.buildx-cache
 
 # Set up working directory
 WORKDIR /workspace
