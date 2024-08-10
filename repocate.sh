@@ -42,7 +42,19 @@ create_snapshot() {
     log "INFO" "Created snapshot: $snapshot_name"
 }
 
-# Function to ensure repo is cloned/updated and handle dynamic branching
+# Function to find a free port on the host
+find_free_port() {
+    local port
+    while true; do
+        port=$(shuf -i 2000-65000 -n 1)  # Generate a random port number between 2000 and 65000
+        if ! netstat -tuln | grep -q ":$port "; then  # Check if the port is free
+            echo "$port"
+            return
+        fi
+    done
+}
+
+# Updated ensure_repo function
 ensure_repo() {
     local repo_url=$1
     local repo_name=$(basename "$repo_url" .git)
@@ -51,7 +63,7 @@ ensure_repo() {
     mkdir -p "$REPOCATE_WORKSPACE/$repo_name/container_configs"
     mkdir -p "$project_dir"
     
-    if [[ ! -d "$project_dir" ]]; then
+    if [[ ! -d "$project_dir/.git" ]]; then
         log "INFO" "Cloning repository $repo_url"
         git clone "$repo_url" "$project_dir" || error_exit "Failed to clone repository"
         echo -n "Cloning repository... "
@@ -69,23 +81,11 @@ ensure_repo() {
     echo "$project_dir"
 }
 
-# Function to find a free port on the host
-find_free_port() {
-    local port
-    while true; do
-        port=$(shuf -i 2000-65000 -n 1)  # Generate a random port number between 2000 and 65000
-        if ! netstat -tuln | grep -q ":$port "; then  # Check if the port is free
-            echo "$port"
-            return
-        fi
-    done
-}
-
-# Function to create and start container with dynamic port and volume management
+# Updated init_container function
 init_container() {
     ensure_user_in_docker_group
     local repo_url=$1
-    local repo_name=$(basename "$repo_url" .git)
+    local repo_name=$(basename "$repo_url" .git | tr -cd '[:alnum:]-')
     local project_dir=$(ensure_repo "$repo_url")
     local container_name="repocate-${repo_name}"
     local volume_name="repocate-${repo_name}-vol"
