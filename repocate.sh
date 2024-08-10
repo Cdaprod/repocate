@@ -5,6 +5,16 @@ set -euo pipefail
 # Source common functions and variables
 source "$(dirname "$0")/repocate-common.sh"
 
+# Function to ensure the user is in the Docker group
+ensure_user_in_docker_group() {
+    if ! groups $USER | grep -q "\bdocker\b"; then
+        echo "User is not in the Docker group. Adding user to Docker group..."
+        sudo usermod -aG docker $USER
+        echo "User added to Docker group. Please log out and log back in or run 'newgrp docker' to apply the changes."
+        exit 1
+    fi
+}
+
 # Function to ensure repo is cloned/updated
 ensure_repo() {
     local repo_url=$1
@@ -30,6 +40,7 @@ ensure_repo() {
 
 # Function to create and start container
 create_container() {
+    ensure_user_in_docker_group
     local repo_url=$1
     local dir_path=$(ensure_repo "$repo_url")
     local container_name=$(get_container_name "$repo_url")
@@ -71,6 +82,7 @@ create_container() {
 
 # Function to enter container
 enter_container() {
+    ensure_user_in_docker_group
     local repo_url=$1
     local container_name=$(get_container_name "$repo_url")
     
@@ -162,6 +174,7 @@ EOF
 
 # Check prerequisites
 check_and_install_prerequisites
+# Other functions here...
 
 # Main script logic
 case ${1:-} in
@@ -188,6 +201,7 @@ case ${1:-} in
         rebuild_container "$2"
         ;;
     list)
+        ensure_user_in_docker_group
         list_containers
         ;;
     version)
