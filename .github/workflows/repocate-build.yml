@@ -4,12 +4,15 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'  # Trigger on tag push that starts with 'v'
   pull_request:
     branches:
       - main
 
 jobs:
   build:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -27,18 +30,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
     - name: Build Docker image
       run: |
         docker buildx build --cache-from=type=local,src=/tmp/.buildx-cache \
                             --cache-to=type=local,dest=/tmp/.buildx-cache \
-                            --tag cdaprod/repocate:${{ github.sha }} \
-                            --push .
+                            --tag cdaprod/repocate:${{ github.sha }} .
 
     - name: Save Build Artifact
       uses: actions/upload-artifact@v3
@@ -46,6 +42,35 @@ jobs:
         name: build-artifact
         path: /tmp/.buildx-cache
 
+  push:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Extract version tag
+      id: vars
+      run: echo "VERSION_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+    - name: Load Build Artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: build-artifact
+        path: /tmp/.buildx-cache
+
     - name: Push Docker image to DockerHub
       run: |
-        docker push cdaprod/repocate:${{ github.sha }}
+        docker buildx build --cache-from=type=local,src=/tmp/.buildx-cache \
+                            --tag cdaprod/repocate:${{ env.VERSION_TAG }} \
+                            --push .
