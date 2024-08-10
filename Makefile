@@ -1,17 +1,45 @@
+# Define default installation paths
 PREFIX ?= /usr/local
 BINDIR ?= $(PREFIX)/bin
 MANDIR ?= $(PREFIX)/share/man/man1
+REPOCATE_DIR ?= ~/Repocate
 
-.PHONY: all install uninstall
+# Define source and target files
+SOURCES = repocate repocate-common.sh repocate.1
+TARGETS = $(addprefix $(DESTDIR)$(BINDIR)/, $(basename $(SOURCES)))
 
-all: repocate repocate-common.sh repocate.1
+.PHONY: all install uninstall clean setup_env
 
-install: repocate repocate-common.sh repocate.1
+# Default target that compiles everything
+all: setup_env $(SOURCES)
+
+# Install binaries and man pages
+install: $(SOURCES)
 	install -d $(DESTDIR)$(BINDIR)
 	install -m 755 repocate $(DESTDIR)$(BINDIR)/repocate
 	install -m 644 repocate-common.sh $(DESTDIR)$(BINDIR)/repocate-common.sh
 	install -d $(DESTDIR)$(MANDIR)
 	install -m 644 repocate.1 $(DESTDIR)$(MANDIR)/repocate.1
 
+# Setup environment
+setup_env:
+	@echo "Setting up the Repocate environment..."
+	# Create Repocate directory structure
+	mkdir -p $(REPOCATE_DIR)/.config/zsh
+	mkdir -p $(REPOCATE_DIR)/workspace
+	# Move configuration files into Repocate directory
+	mv .zshrc $(REPOCATE_DIR)/.config/zsh/.zshrc || true
+	mv init.vim $(REPOCATE_DIR)/.config/nvim/init.vim || true
+	mv repocate $(REPOCATE_DIR)/workspace/repocate || true
+	@echo "Environment setup complete in $(REPOCATE_DIR)"
+
+# Uninstall binaries and man pages
 uninstall:
-	rm -
+	rm -f $(DESTDIR)$(BINDIR)/repocate
+	rm -f $(DESTDIR)$(BINDIR)/repocate-common.sh
+	rm -f $(DESTDIR)$(MANDIR)/repocate.1
+
+# Clean up any temporary files
+clean:
+	rm -f $(TARGETS)
+	rm -rf $(REPOCATE_DIR)
