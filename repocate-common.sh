@@ -11,12 +11,14 @@ if command -v tput > /dev/null && tput setaf 1 > /dev/null 2>&1; then
     GREEN=$(tput setaf 2)
     YELLOW=$(tput setaf 3)
     BLUE=$(tput setaf 4)
+    CYAN=$(tput setaf 6)
     RESET=$(tput sgr0)
 else
     RED=""
     GREEN=""
     YELLOW=""
     BLUE=""
+    CYAN=""
     RESET=""
 fi
 
