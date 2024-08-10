@@ -15,36 +15,80 @@ ensure_user_in_docker_group() {
     fi
 }
 
-# Function to ensure repo is cloned/updated
+# Function to create a dynamic branch name based on the current time
+create_dynamic_branch() {
+    local branch_name="repocate-$(date +%Y%m%d-%H%M%S)"
+    git checkout -b "$branch_name"
+    log "INFO" "Created and switched to new branch: $branch_name"
+}
+
+# Function to dynamically commit and push changes
+dynamic_commit_and_push() {
+    local commit_message="${1:-"Automated commit by repocate on $(date)"}"
+    git add .
+    git commit -m "$commit_message"
+    git push origin $(git rev-parse --abbrev-ref HEAD)
+    log "INFO" "Committed and pushed changes with message: $commit_message"
+}
+
+# Function to create a snapshot (Git tag) before significant changes
+create_snapshot() {
+    local snapshot_name="snapshot-$(date +%Y%m%d-%H%M%S)"
+    git tag "$snapshot_name"
+    log "INFO" "Created snapshot: $snapshot_name"
+}
+
+# Function to ensure repo is cloned/updated and handle dynamic branching
 ensure_repo() {
     local repo_url=$1
-    local dir_name=$(basename "$repo_url" .git)
-    local full_path="$WORKSPACE_DIR/$dir_name"
+    local repo_name=$(basename "$repo_url" .git)
+    local project_dir="$REPOCATE_WORKSPACE/$repo_name/source_code"
     
-    mkdir -p "$WORKSPACE_DIR"
+    mkdir -p "$REPOCATE_WORKSPACE/$repo_name/container_configs"
+    mkdir -p "$project_dir"
     
-    if [[ ! -d "$full_path" ]]; then
+    if [[ ! -d "$project_dir" ]]; then
         log "INFO" "Cloning repository $repo_url"
-        git clone "$repo_url" "$full_path" || error_exit "Failed to clone repository"
+        git clone "$repo_url" "$project_dir" || error_exit "Failed to clone repository"
         echo -n "Cloning repository... "
         progress_bar 5 20
     else
         log "INFO" "Updating repository $repo_url"
-        (cd "$full_path" && git pull) || log "WARN" "Failed to update repository"
+        (cd "$project_dir" && git pull) || log "WARN" "Failed to update repository"
         echo -n "Updating repository... "
         progress_bar 2 10
     fi
     
-    echo "$full_path"
+    # Create a dynamic branch after cloning/updating
+    (cd "$project_dir" && create_dynamic_branch)
+    
+    echo "$project_dir"
 }
 
-# Function to create and start container
-create_container() {
+# Function to find a free port on the host
+find_free_port() {
+    local port
+    while true; do
+        port=$(shuf -i 2000-65000 -n 1)  # Generate a random port number between 2000 and 65000
+        if ! netstat -tuln | grep -q ":$port "; then  # Check if the port is free
+            echo "$port"
+            return
+        fi
+    done
+}
+
+# Function to create and start container with dynamic port and volume management
+init_container() {
     ensure_user_in_docker_group
     local repo_url=$1
-    local dir_path=$(ensure_repo "$repo_url")
+    local repo_name=$(basename "$repo_url" .git)
+    local project_dir=$(ensure_repo "$repo_url")
     local container_name=$(get_container_name "$repo_url")
-    
+    local volume_name="repocate-${repo_name}-vol"
+
+    local port_3000=$(find_free_port)  # Find a free port for 3000
+    local port_50051=$(find_free_port)  # Find a free port for 50051
+
     if docker ps -a --format '{{.Names}}' | grep -q "^$container_name$"; then
         log "INFO" "Container $container_name already exists. Checking status..."
         
@@ -57,11 +101,16 @@ create_container() {
     else
         log "INFO" "Creating new container $container_name"
         echo -n "Creating container... "
+        
+        # Create a Docker volume dynamically
+        docker volume create "$volume_name"
+        
         docker run -d \
-            -v "$dir_path:/workspace" \
-            -v "$HOME/.gitconfig:/root/.gitconfig:ro" \
-            -v "$HOME/.ssh:/root/.ssh:ro" \
-            -p 3000:3000 -p 50051:50051 \
+            -v "$volume_name:/workspace" \  # Use Docker volume for workspace
+            -v "$HOME/.ssh:/root/.ssh:ro" \  # Mount SSH keys for Git
+            -v "$HOME/.gitconfig:/root/.gitconfig:ro" \  # Securely mount .gitconfig
+            -p "$port_3000:3000" \  # Bind dynamic port for 3000
+            -p "$port_50051:50051" \  # Bind dynamic port for 50051
             -e TERM="$TERM" \
             -e GIT_AUTHOR_NAME="$(git config user.name)" \
             -e GIT_AUTHOR_EMAIL="$(git config user.email)" \
@@ -73,6 +122,14 @@ create_container() {
             --name "$container_name" \
             "$BASE_IMAGE" \
             tail -f /dev/null > /dev/null 2>&1 || error_exit "Failed to create container"
+        
+        # Check that the container was created successfully
+        if ! docker ps -a --format '{{.Names}}' | grep -q "^$container_name$"; then
+            error_exit "Failed to confirm the creation of container $container_name"
+        fi
+
+        log "INFO" "Container $container_name created with ports $port_3000:3000 and $port_50051:50051"
+
         progress_bar 3 15
     fi
     
@@ -112,10 +169,12 @@ stop_container() {
     fi
 }
 
-# Function to rebuild container
+# Function to rebuild container with snapshot and dynamic branching
 rebuild_container() {
     local repo_url=$1
     local container_name=$(get_container_name "$repo_url")
+    
+    create_snapshot
     
     if [[ "$(docker ps -a -q -f name=$container_name)" ]]; then
         log "INFO" "Removing existing container $container_name"
@@ -124,7 +183,7 @@ rebuild_container() {
         progress_bar 2 10
     fi
     
-    create_container "$repo_url"
+    init_container "$repo_url"
 }
 
 # Function to list containers
@@ -154,8 +213,21 @@ show_version() {
 
 # Function to show usage
 usage() {
+    cat << "EOF"
+
+______                           _       
+| ___ \                         | |      
+| |_/ /___ _ __   ___   ___ __ _| |_ ___ 
+|    // _ \ '_ \ / _ \ / __/ _` | __/ _ \
+| |\ \  __/ |_) | (_) | (_| (_| | ||  __/
+\_| \_\___| .__/ \___/ \___\__,_|\__\___|
+          | |                            
+          |_|                            
+
+EOF
+
     cat << EOF
-${BLUE}Usage:${RESET} repocate <command> [<repo-url>]
+${BLUE}Usage:${RESET} repocate <command> [<repo-url> | <repo_name>]
 
 ${YELLOW}Commands:${RESET}
   ${GREEN}create <repo-url>${RESET}  Clone repo and create/start dev container
@@ -168,19 +240,27 @@ ${YELLOW}Commands:${RESET}
   ${GREEN}version${RESET}            Show version information
   ${GREEN}help${RESET}               Show this help message
 
-For more information, see ${BLUE}https://github.com/yourusername/repocate${RESET}
+${YELLOW}Advanced Usage:${RESET}
+  ${GREEN}snapshot${RESET}           Create a Git snapshot before major changes
+  ${GREEN}branch${RESET}             Create and switch to a dynamic branch
+  ${GREEN}commit${RESET}             Automatically commit and push changes with a dynamic message
+  ${GREEN}rollback${RESET}           Revert to the last known good commit
+  ${GREEN}volume${RESET}             Dynamically create and manage Docker volumes
+
+${CYAN}Tip:${RESET} After the first time you use \`repocate <repo-url>\`, you can simply use \`repocate <repo_name>\` for quicker access!
+
+For more information, visit ${BLUE}https://github.com/Cdaprod/repocate${RESET}
 EOF
 }
 
 # Check prerequisites
 check_and_install_prerequisites
-# Other functions here...
 
 # Main script logic
 case ${1:-} in
     create)
         [[ $# -eq 2 ]] || error_exit "The 'create' command requires a repository URL"
-        create_container "$2"
+        init_container "$2"
         ;;
     enter)
         [[ $# -eq 2 ]] || error_exit "The 'enter' command requires a repository URL"

@@ -10,9 +10,11 @@ ENV GOPATH=/root/go
 ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 ENV NVM_DIR=/root/.nvm
 ENV NODE_VERSION=16.15.1
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 # Install basic tools and dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     wget \
@@ -29,11 +31,11 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     software-properties-common \
     locales \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the locale
-RUN localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
-ENV LANG en_US.utf8
+RUN locale-gen en_US.UTF-8
 
 # Install Go
 RUN wget https://golang.org/dl/go1.17.linux-amd64.tar.gz \
@@ -72,15 +74,16 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
     && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
-# Configure Zsh
-COPY .zshrc /root/.zshrc
+# Copy Zsh configuration files
+COPY .config/zsh/.zshrc /root/.zshrc
+COPY .config/zsh/custom_plugins.zsh /root/.oh-my-zsh/custom/custom_plugins.zsh
 
 # Install Neovim plugin manager (vim-plug)
 RUN curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
-# Set up Neovim configuration
-COPY init.vim /root/.config/nvim/init.vim
+# Copy Neovim configuration
+COPY .config/nvim/init.vim /root/.config/nvim/init.vim
 
 # Install Neovim plugins
 RUN nvim --headless +PlugInstall +qall
