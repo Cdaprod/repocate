@@ -71,6 +71,6 @@ jobs:
 
     - name: Push Docker image to DockerHub
       run: |
-        docker buildx build --cache-from=type=local,src=/tmp/.buildx-cache \
-                            --tag cdaprod/repocate:${{ env.VERSION_TAG }} \
+        docker buildx build --load --cache-from=type=local,src=/tmp/.buildx-cache \
+                            --tag cdaprod/repocate:${{ github.ref_name }} \
                             --push .

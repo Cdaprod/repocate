@@ -38,6 +38,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set the locale
 RUN locale-gen en_US.UTF-8
 
+# Set up the cache directory
+RUN mkdir -p /tmp/.buildx-cache
+
 # Install Go
 RUN wget https://golang.org/dl/go1.20.3.linux-amd64.tar.gz \
     && tar -C /usr/local -xzf go1.20.3.linux-amd64.tar.gz \
@@ -88,10 +91,7 @@ RUN curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim
 COPY .config/nvim/init.vim /root/.config/nvim/init.vim
 
 # Install Neovim plugins
-RUN nvim --headless +PlugInstall +qall || { echo "Neovim plugin installation failed"; exit 1; }
-
-# Setup cache directory
-RUN mkdir -p /tmp/.buildx-cache
+RUN nvim --headless +PlugInstall +qall
 
 # Set up working directory
 WORKDIR /workspace
