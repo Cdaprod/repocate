@@ -5,6 +5,15 @@ set -euo pipefail
 # Source common functions and variables
 source "$(dirname "$0")/repocate-common.sh"
 
+# Set BASE_IMAGE to repocate-base
+BASE_IMAGE="${BASE_IMAGE:-repocate-base}"
+
+# Ensure the image is available locally or build it if necessary
+if ! docker image inspect "$BASE_IMAGE" > /dev/null 2>&1; then
+    echo "Building Docker image $BASE_IMAGE from Dockerfile"
+    docker build -t "$BASE_IMAGE" . || error_exit "Failed to build Docker image $BASE_IMAGE"
+fi
+
 # Define REPOCATE_WORKSPACE if not set
 REPOCATE_WORKSPACE="${REPOCATE_WORKSPACE:-$HOME/Repocate}"
 mkdir -p "$REPOCATE_WORKSPACE"
