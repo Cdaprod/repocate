@@ -226,11 +226,11 @@ enter_container() {
     
     if [[ "$(docker ps -q -f name=$container_name)" ]]; then
         log "INFO" "Entering container $container_name"
-        docker exec -it "$container_name" /bin/zsh -c "cd /workspace && /bin/zsh" || error_exit "Failed to exec into container"
+        docker exec -it "$container_name" /bin/bash -c "cd /workspace && exec /bin/zsh || exec /bin/bash" || error_exit "Failed to exec into container"
     else
         log "WARN" "Container $container_name is not running. Starting container..."
         docker start "$container_name" > /dev/null || error_exit "Failed to start container"
-        docker exec -it "$container_name" /bin/zsh -c "cd /workspace && /bin/zsh" || error_exit "Failed to exec into container"
+        docker exec -it "$container_name" /bin/bash -c "cd /workspace && exec /bin/zsh || exec /bin/bash" || error_exit "Failed to exec into container"
     fi
 }
 
