@@ -5,14 +5,14 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Set environment variables
-ENV GO111MODULE=on
-ENV GOROOT=/usr/local/go
-ENV GOPATH=/root/go
-ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-ENV NVM_DIR=/root/.nvm
-ENV NODE_VERSION=16.15.1
-ENV LANG=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8
+ENV GO111MODULE=on \
+    GOROOT=/usr/local/go \
+    GOPATH=/root/go \
+    PATH=$GOPATH/bin:$GOROOT/bin:$PATH \
+    NVM_DIR=/root/.nvm \
+    NODE_VERSION=16.15.1 \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
 
 # Install basic tools and dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -64,11 +64,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | b
 
 # Install global npm packages
 RUN . $NVM_DIR/nvm.sh \
-    && npm install -g typescript \
-    && npm install -g eslint \
-    && npm install -g prettier \
-    && npm install -g ts-node \
-    && npm install -g yarn
+    && npm install -g typescript eslint prettier ts-node yarn
 
 # Install Rust (for some Neovim plugins)
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
