@@ -5,13 +5,13 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Set environment variables
-ENV GO111MODULE=on \
-    GOROOT=/usr/local/go \
-    GOPATH=/root/go \
-    PATH=$GOPATH/bin:$GOROOT/bin:$PATH \
-    NVM_DIR=/root/.nvm \
-    NODE_VERSION=16.15.1 \
-    LANG=en_US.UTF-8 \
+ARG GO111MODULE=on
+ARG GOROOT=/usr/local/go
+ARG GOPATH=/root/go
+ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+ARG NVM_DIR=/root/.nvm
+ARG NODE_VERSION=16.15.1
+ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 # Install basic tools and dependencies

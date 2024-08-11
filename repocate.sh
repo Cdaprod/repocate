@@ -8,7 +8,7 @@ source "$(dirname "$0")/repocate-common.sh"
 # Set BASE_IMAGE to repocate-base
 BASE_IMAGE="${BASE_IMAGE:-repocate-base}"
 
-# Ensure the image is available locally or build it if necessary
+# Build the Docker image if it doesn't exist
 if ! docker image inspect "$BASE_IMAGE" > /dev/null 2>&1; then
     echo "Building Docker image $BASE_IMAGE from Dockerfile"
     docker build -t "$BASE_IMAGE" . || error_exit "Failed to build Docker image $BASE_IMAGE"
