@@ -81,11 +81,11 @@ ensure_repo() {
     echo "$project_dir"
 }
 
-# Updated init_container function
+# Function to create and start container with dynamic port and volume management
 init_container() {
     ensure_user_in_docker_group
     local repo_url=$1
-    local repo_name=$(basename "$repo_url" .git | tr -cd '[:alnum:]-')
+    local repo_name=$(basename "$repo_url" .git | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')  # Sanitize repo_name
     local project_dir=$(ensure_repo "$repo_url")
     local container_name="repocate-${repo_name}"
     local volume_name="repocate-${repo_name}-vol"
