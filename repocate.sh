@@ -182,7 +182,7 @@ init_container() {
     local volume_name="repocate-${repo_name}-vol"
 
     # Ensure BASE_IMAGE is set
-    if [[ -z "$BASE_IMAGE" ]]; then
+    if [[ -z "${BASE_IMAGE:-}" ]]; then
         error_exit "BASE_IMAGE is not set. Please set it before running the script."
     fi
 
@@ -193,6 +193,10 @@ init_container() {
         log "INFO" "Pulling Docker image $BASE_IMAGE"
         docker pull "$BASE_IMAGE" || error_exit "Failed to pull Docker image $BASE_IMAGE"
     fi
+
+    # Find free ports for binding
+    local port_3000=$(find_free_port)  # Find a free port for 3000
+    local port_50051=$(find_free_port)  # Find a free port for 50051
 
     log "INFO" "Creating new container $container_name"
     docker volume create "$volume_name" || error_exit "Failed to create Docker volume"
