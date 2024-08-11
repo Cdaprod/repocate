@@ -90,6 +90,12 @@ init_container() {
     local container_name="repocate-${repo_name}"
     local volume_name="repocate-${repo_name}-vol"
 
+    # Debug: Print the values used in the Docker command
+    echo "Debug: repo_url=$repo_url"
+    echo "Debug: repo_name=$repo_name"
+    echo "Debug: container_name=$container_name"
+    echo "Debug: volume_name=$volume_name"
+
     local port_3000=$(find_free_port)  # Find a free port for 3000
     local port_50051=$(find_free_port)  # Find a free port for 50051
 
