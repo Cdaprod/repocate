@@ -75,6 +75,15 @@ RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/inst
     && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \
     && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
+# Verify Zsh installation and set fallback
+RUN if command -v zsh > /dev/null; then \
+        echo "Zsh installed successfully"; \
+    else \
+        echo "Zsh not found, falling back to Bash"; \
+        SHELL ["/bin/bash", "-c"]; \
+        CMD ["/bin/bash"]; \
+    fi
+
 # Copy Zsh configuration files
 COPY .config/zsh/.zshrc /root/.zshrc
 COPY .config/zsh/custom_plugins.zsh /root/.oh-my-zsh/custom/custom_plugins.zsh
