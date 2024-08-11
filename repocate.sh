@@ -65,12 +65,12 @@ ensure_repo() {
     
     if [[ ! -d "$project_dir/.git" ]]; then
         log "INFO" "Cloning repository $repo_url"
-        git clone "$repo_url" "$project_dir" || error_exit "Failed to clone repository"
+        git clone --verbose "$repo_url" "$project_dir" || error_exit "Failed to clone repository"
         echo -n "Cloning repository... "
         progress_bar 5 20
     else
         log "INFO" "Updating repository $repo_url"
-        (cd "$project_dir" && git pull) || log "WARN" "Failed to update repository"
+        (cd "$project_dir" && git pull --verbose) || log "WARN" "Failed to update repository"
         echo -n "Updating repository... "
         progress_bar 2 10
     fi
@@ -114,13 +114,28 @@ init_container() {
         
         # Create a Docker volume dynamically
         docker volume create "$volume_name"
+        log "DEBUG" "Creating Docker volume: $volume_name"
+        docker volume create "$volume_name" || error_exit "Failed to create Docker volume"
         
+        if [[ -z "${BASE_IMAGE:-}" ]]; then
+            error_exit "BASE_IMAGE is not set. Please set the BASE_IMAGE variable."
+        else
+            log "DEBUG" "Using BASE_IMAGE: $BASE_IMAGE"
+        fi
+        
+        log "DEBUG" "Running Docker container: $container_name with image $BASE_IMAGE"
         docker run -d \
             -v "$volume_name:/workspace" \  # Use Docker volume for workspace
             -v "$HOME/.ssh:/root/.ssh:ro" \  # Mount SSH keys for Git
             -v "$HOME/.gitconfig:/root/.gitconfig:ro" \  # Securely mount .gitconfig
             -p "$port_3000:3000" \  # Bind dynamic port for 3000
             -p "$port_50051:50051" \  # Bind dynamic port for 50051
+            --log-level debug \
+            -v "$volume_name:/workspace" \
+            -v "$HOME/.ssh:/root/.ssh:ro" \
+            -v "$HOME/.gitconfig:/root/.gitconfig:ro" \
+            -p "$port_3000:3000" \
+            -p "$port_50051:50051" \
             -e TERM="$TERM" \
             -e GIT_AUTHOR_NAME="$(git config user.name)" \
             -e GIT_AUTHOR_EMAIL="$(git config user.email)" \
@@ -219,6 +234,14 @@ cleanup_containers() {
 # Function to show version
 show_version() {
     echo "${GREEN}Repocate version $VERSION${RESET}"
+}
+
+# Function to better log error_exit
+error_exit() {
+    log "ERROR" "$1"
+    echo "Last 10 Docker logs:"  # Example for Docker-specific error logging
+    docker logs --tail 10 "$container_name" || echo "No logs available or container not found"
+    exit 1
 }
 
 # Function to show usage
