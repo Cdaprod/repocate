@@ -41,10 +41,10 @@ RUN locale-gen en_US.UTF-8
 # Set up the cache directory
 RUN mkdir -p /tmp/.buildx-cache
 
-# Install Go
-RUN wget https://golang.org/dl/go1.20.3.linux-amd64.tar.gz \
-    && tar -C /usr/local -xzf go1.20.3.linux-amd64.tar.gz \
-    && rm go1.20.3.linux-amd64.tar.gz
+# Install Go for ARM64 (or the correct architecture)
+RUN wget https://golang.org/dl/go1.20.3.linux-arm64.tar.gz \
+    && tar -C /usr/local -xzf go1.20.3.linux-arm64.tar.gz \
+    && rm go1.20.3.linux-arm64.tar.gz
 
 # Install Go Tools
 RUN go install github.com/golang/protobuf/protoc-gen-go@latest \
