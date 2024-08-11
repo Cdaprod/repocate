@@ -202,7 +202,7 @@ init_container() {
     docker volume create "$volume_name" || error_exit "Failed to create Docker volume"
 
     log "DEBUG" "Running Docker container: $container_name with image $BASE_IMAGE"
-    docker run -d \
+    if ! docker run -d \
         -v "$volume_name:/workspace" \
         -v "$HOME/.ssh:/root/.ssh:ro" \
         -v "$HOME/.gitconfig:/root/.gitconfig:ro" \
@@ -210,7 +210,9 @@ init_container() {
         -p "$port_50051:50051" \
         --name "$container_name" \
         "$BASE_IMAGE" \
-        tail -f /dev/null > /dev/null 2>&1 || error_exit "Failed to create container $container_name"
+        tail -f /dev/null; then
+        error_exit "Failed to create container $container_name"
+    fi
 
     # Confirm the container was created successfully
     if ! docker ps -a --format '{{.Names}}' | grep -q "^$container_name$"; then
