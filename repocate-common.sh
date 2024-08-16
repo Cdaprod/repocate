@@ -100,6 +100,5 @@ check_and_install_prerequisites() {
 
 # Function to get container name from repo URL
 get_container_name() {
-    basename=$(basename "$1" .git)
-    echo "repocate-${basename}"
+    basename "$1" .git
 }
