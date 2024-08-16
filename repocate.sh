@@ -179,7 +179,7 @@ init_container() {
     local repo_name=$(basename "$repo_url" .git | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')  # Sanitize repo_name
     local project_dir=$(ensure_repo "$repo_url")
     local container_name="${repo_name}"
-    local volume_name="repocate-${repo_name}-vol"
+    local volume_name="repocate-${repo_name}-vol"  # Apply prefix if needed
 
     # Ensure BASE_IMAGE is set
     if [[ -z "${BASE_IMAGE:-}" ]]; then
@@ -199,7 +199,13 @@ init_container() {
     local port_50051=$(find_free_port)  # Find a free port for 50051
 
     log "INFO" "Creating new container $container_name"
-    docker volume create "$volume_name" || error_exit "Failed to create Docker volume"
+    
+    # Ensure no double prefixing issues
+    if docker volume ls --format '{{.Name}}' | grep -q "^$volume_name$"; then
+        log "INFO" "Volume $volume_name already exists. Using existing volume."
+    else
+        docker volume create "$volume_name" || error_exit "Failed to create Docker volume"
+    fi
 
     log "DEBUG" "Running Docker container: $container_name with image $BASE_IMAGE"
     if ! docker run -d \
