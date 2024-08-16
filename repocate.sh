@@ -229,7 +229,17 @@ enter_container() {
     ensure_user_in_docker_group
     local repo_url=$1
     local container_name=$(get_container_name "$repo_url")
+
+    # Ensure the container name is not prefixed twice
+    if [[ "$container_name" != repocate-* ]]; then
+        container_name="repocate-${container_name}"
+    fi
     
+    if [[ "$container_name" == "test-container" ]]; then
+        log "INFO" "Skipping operations on test-container."
+        return
+    fi
+
     if [[ "$(docker ps -q -f name=$container_name)" ]]; then
         log "INFO" "Entering container $container_name"
         docker exec -it "$container_name" /bin/bash -c "cd /workspace && exec /bin/zsh || exec /bin/bash" || error_exit "Failed to exec into container"
