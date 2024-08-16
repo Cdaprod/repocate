@@ -178,7 +178,7 @@ init_container() {
     local repo_url=$1
     local repo_name=$(basename "$repo_url" .git | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')  # Sanitize repo_name
     local project_dir=$(ensure_repo "$repo_url")
-    local container_name="repocate-${repo_name}"
+    local container_name="${repo_name}"
     local volume_name="repocate-${repo_name}-vol"
 
     # Ensure BASE_IMAGE is set
