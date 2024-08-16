@@ -88,6 +88,13 @@ RUN if command -v zsh > /dev/null; then \
 COPY .config/zsh/.zshrc /root/.zshrc
 COPY .config/zsh/custom_plugins.zsh /root/.oh-my-zsh/custom/custom_plugins.zsh
 
+# Ensure correct ownership and permissions
+RUN chown -R root:root /root/.zshrc /root/.oh-my-zsh/custom/custom_plugins.zsh \
+    && chmod 644 /root/.zshrc /root/.oh-my-zsh/custom/custom_plugins.zsh
+
+# Verify Zsh configuration
+RUN zsh -c "source /root/.zshrc && echo 'Zsh configuration loaded successfully'"
+
 # Install Neovim plugin manager (vim-plug)
 RUN curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
