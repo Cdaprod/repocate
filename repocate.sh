@@ -162,7 +162,6 @@ ensure_repo() {
 #     # Optionally show a progress bar or delay for effect (can be removed if not needed)
 #     progress_bar 3 15
 # }
-
 init_container() {
     ensure_user_in_docker_group
     local repo_url=$1
