@@ -271,16 +271,21 @@ rebuild_container() {
     local repo_url=$1
     local container_name=$(get_container_name "$repo_url")
     
-    create_snapshot
-    
-    if [[ "$(docker ps -a -q -f name=$container_name)" ]]; then
-        log "INFO" "Removing existing container $container_name"
-        echo -n "Removing existing container... "
+    # Check if the provided argument is a valid repository URL or a container name
+    if [[ "$repo_url" == *"/"* ]]; then
+        # Assuming it's a URL
+        create_snapshot
+        stop_container "$repo_url"
+        echo "INFO: Removing existing container $container_name"
         docker rm -f "$container_name" > /dev/null || error_exit "Failed to remove container"
-        progress_bar 2 10
+        init_container "$repo_url"
+    else
+        # Treat as a container name, skip the repository cloning step
+        echo "INFO: Rebuilding container $container_name without cloning a repository"
+        stop_container "$repo_url"
+        docker rm -f "$container_name" > /dev/null || error_exit "Failed to remove container"
+        init_container "$repo_url" # You may need to modify init_container function to handle this case
     fi
-    
-    init_container "$repo_url"
 }
 
 # Function to list containers
