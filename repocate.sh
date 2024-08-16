@@ -308,25 +308,21 @@ init_container() {
 enter_container() {
     ensure_user_in_docker_group
     local repo_url=$1
-    local container_name=$(get_container_name "$repo_url")
+    local repo_name=$(basename "$repo_url" .git | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')
+    local container_name="${repo_name}"
 
-    # Ensure the container name is not prefixed twice
-    if [[ "$container_name" != repocate-* ]]; then
-        container_name="repocate-${container_name}"
-    fi
-    
-    if [[ "$container_name" == "test-container" ]]; then
-        log "INFO" "Skipping operations on test-container."
-        return
-    fi
-
+    # Check if the container is running, and if not, attempt to start it
     if [[ "$(docker ps -q -f name=$container_name)" ]]; then
         log "INFO" "Entering container $container_name"
         docker exec -it "$container_name" /bin/bash -c "cd /workspace && exec /bin/zsh || exec /bin/bash" || error_exit "Failed to exec into container"
     else
         log "WARN" "Container $container_name is not running. Starting container..."
-        docker start "$container_name" > /dev/null || error_exit "Failed to start container"
-        docker exec -it "$container_name" /bin/bash -c "cd /workspace && exec /bin/zsh || exec /bin/bash" || error_exit "Failed to exec into container"
+        if docker start "$container_name" > /dev/null; then
+            log "INFO" "Successfully started container $container_name"
+            docker exec -it "$container_name" /bin/bash -c "cd /workspace && exec /bin/zsh || exec /bin/bash" || error_exit "Failed to exec into container"
+        else
+            error_exit "Failed to start container $container_name"
+        fi
     fi
 }
 
