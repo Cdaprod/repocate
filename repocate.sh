@@ -173,42 +173,112 @@ ensure_repo() {
 #     docker exec -it "$container_name" /bin/zsh -c "cd /workspace && /bin/zsh" || error_exit "Failed to exec into container"
 # }
 
+
+## trying something new again after this
+# init_container() {
+#     ensure_user_in_docker_group
+#     local repo_url=$1
+#     local repo_name=$(basename "$repo_url" .git | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')  # Sanitize repo_name
+#     local project_dir=$(ensure_repo "$repo_url")
+#     local container_name="${repo_name}"
+#     local volume_name="repocate-${repo_name}-vol"  # Apply prefix if needed
+
+#     # Ensure BASE_IMAGE is set
+#     if [[ -z "${BASE_IMAGE:-}" ]]; then
+#         error_exit "BASE_IMAGE is not set. Please set it before running the script."
+#     fi
+
+#     echo "Using BASE_IMAGE: $BASE_IMAGE"
+
+#     # Ensure the image is available locally
+#     if ! docker image inspect "$BASE_IMAGE" > /dev/null 2>&1; then
+#         log "INFO" "Pulling Docker image $BASE_IMAGE"
+#         docker pull "$BASE_IMAGE" || error_exit "Failed to pull Docker image $BASE_IMAGE"
+#     fi
+
+#     # Find free ports for binding
+#     local port_3000=$(find_free_port)  # Find a free port for 3000
+#     local port_50051=$(find_free_port)  # Find a free port for 50051
+
+#     log "INFO" "Creating new container $container_name"
+    
+#     # Ensure no double prefixing issues
+#     if docker volume ls --format '{{.Name}}' | grep -q "^$volume_name$"; then
+#         log "INFO" "Volume $volume_name already exists. Using existing volume."
+#     else
+#         docker volume create "$volume_name" || error_exit "Failed to create Docker volume"
+#     fi
+
+#     log "DEBUG" "Running Docker container: $container_name with image $BASE_IMAGE"
+#     if ! docker run -d \
+#         -v "$volume_name:/workspace" \
+#         -v "$HOME/.ssh:/root/.ssh:ro" \
+#         -v "$HOME/.gitconfig:/root/.gitconfig:ro" \
+#         -p "$port_3000:3000" \
+#         -p "$port_50051:50051" \
+#         --name "$container_name" \
+#         "$BASE_IMAGE" \
+#         tail -f /dev/null; then
+#         error_exit "Failed to create container $container_name"
+#     fi
+
+#     # Confirm the container was created successfully
+#     if ! docker ps -a --format '{{.Names}}' | grep -q "^$container_name$"; then
+#         error_exit "Failed to confirm the creation of container $container_name"
+#     fi
+
+#     log "INFO" "Container $container_name created with ports $port_3000:3000 and $port_50051:50051"
+
+#     progress_bar 3 15
+# }
+
 init_container() {
     ensure_user_in_docker_group
     local repo_url=$1
-    local repo_name=$(basename "$repo_url" .git | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')  # Sanitize repo_name
-    local project_dir=$(ensure_repo "$repo_url")
-    local container_name="${repo_name}"
-    local volume_name="repocate-${repo_name}-vol"  # Apply prefix if needed
+    local repo_name
+    local project_dir
+    local container_name
+    local volume_name
+    local port_3000
+    local port_50051
+    local container_id
 
-    # Ensure BASE_IMAGE is set
+    # Extract repository name and sanitize it for use as a container name
+    repo_name=$(basename "$repo_url" .git | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]-')
+
+    # Set up project directory and container/volume names
+    project_dir=$(ensure_repo "$repo_url")
+    container_name="${repo_name}"
+    volume_name="repocate-${repo_name}-vol"
+
+    # Check that BASE_IMAGE is set
     if [[ -z "${BASE_IMAGE:-}" ]]; then
         error_exit "BASE_IMAGE is not set. Please set it before running the script."
     fi
+    log "INFO" "Using BASE_IMAGE: $BASE_IMAGE"
 
-    echo "Using BASE_IMAGE: $BASE_IMAGE"
-
-    # Ensure the image is available locally
+    # Pull the Docker image if it's not available locally
     if ! docker image inspect "$BASE_IMAGE" > /dev/null 2>&1; then
         log "INFO" "Pulling Docker image $BASE_IMAGE"
         docker pull "$BASE_IMAGE" || error_exit "Failed to pull Docker image $BASE_IMAGE"
     fi
 
-    # Find free ports for binding
-    local port_3000=$(find_free_port)  # Find a free port for 3000
-    local port_50051=$(find_free_port)  # Find a free port for 50051
+    # Find free ports to bind to the container
+    port_3000=$(find_free_port)
+    port_50051=$(find_free_port)
+    log "INFO" "Using ports: $port_3000 (for 3000) and $port_50051 (for 50051)"
 
-    log "INFO" "Creating new container $container_name"
-    
-    # Ensure no double prefixing issues
+    # Check if the Docker volume already exists, and create it if necessary
     if docker volume ls --format '{{.Name}}' | grep -q "^$volume_name$"; then
         log "INFO" "Volume $volume_name already exists. Using existing volume."
     else
-        docker volume create "$volume_name" || error_exit "Failed to create Docker volume"
+        log "INFO" "Creating Docker volume: $volume_name"
+        docker volume create "$volume_name" || error_exit "Failed to create Docker volume $volume_name"
     fi
 
-    log "DEBUG" "Running Docker container: $container_name with image $BASE_IMAGE"
-    if ! docker run -d \
+    # Run the Docker container and capture its ID
+    log "INFO" "Creating new container $container_name"
+    container_id=$(docker run -d \
         -v "$volume_name:/workspace" \
         -v "$HOME/.ssh:/root/.ssh:ro" \
         -v "$HOME/.gitconfig:/root/.gitconfig:ro" \
@@ -216,17 +286,21 @@ init_container() {
         -p "$port_50051:50051" \
         --name "$container_name" \
         "$BASE_IMAGE" \
-        tail -f /dev/null; then
+        tail -f /dev/null)
+
+    # Check if the container creation was successful
+    if [ $? -ne 0 ] || [ -z "$container_id" ]; then
         error_exit "Failed to create container $container_name"
     fi
+    log "INFO" "Container $container_name created successfully with ID $container_id"
 
-    # Confirm the container was created successfully
+    # Verify that the container is listed and recognized by Docker
     if ! docker ps -a --format '{{.Names}}' | grep -q "^$container_name$"; then
         error_exit "Failed to confirm the creation of container $container_name"
     fi
-
     log "INFO" "Container $container_name created with ports $port_3000:3000 and $port_50051:50051"
 
+    # Optionally show a progress bar or delay for effect (can be removed if not needed)
     progress_bar 3 15
 }
 
