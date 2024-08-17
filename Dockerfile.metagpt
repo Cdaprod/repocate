@@ -1,0 +1,94 @@
+# Start from Ubuntu 22.04 base image with multi-arch support
+FROM --platform=$BUILDPLATFORM ubuntu:22.04 AS base
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set environment variables for Go
+ARG GO_VERSION=1.20.3
+ARG TARGETPLATFORM
+ARG ARCH=amd64
+ARG GO_ARCH=amd64
+RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then ARCH=arm64; GO_ARCH=arm64; fi
+
+# Install basic tools and dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    zsh \
+    neovim \
+    ripgrep \
+    fd-find \
+    tmux \
+    fzf \
+    unzip \
+    python3 \
+    python3-pip \
+    protobuf-compiler \
+    build-essential \
+    software-properties-common \
+    locales \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Go based on the architecture
+RUN wget https://golang.org/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz \
+    && tar -C /usr/local -xzf go${GO_VERSION}.linux-${GO_ARCH}.tar.gz \
+    && rm go${GO_VERSION}.linux-${GO_ARCH}.tar.gz
+
+# Set up Go environment
+ENV GOROOT=/usr/local/go
+ENV GOPATH=/root/go
+ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+
+# Install Go Tools
+RUN /usr/local/go/bin/go install github.com/golang/protobuf/protoc-gen-go@latest \
+    && /usr/local/go/bin/go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest \
+    && /usr/local/go/bin/go install golang.org/x/tools/gopls@latest \
+    && /usr/local/go/bin/go install github.com/fatih/gomodifytags@latest \
+    && /usr/local/go/bin/go install github.com/cweill/gotests/gotests@latest \
+    && /usr/local/go/bin/go install github.com/josharian/impl@latest \
+    || { echo "Go tools installation failed"; exit 1; }
+
+# Install Node.js and npm using nvm
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash \
+    && . $NVM_DIR/nvm.sh \
+    && nvm install --lts \
+    && nvm alias default lts/* \
+    && nvm use default
+
+# Install Rust for Neovim plugins
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Set up Zsh and Oh My Zsh
+RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
+    && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \
+    && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+
+# Ensure Zsh is the default shell
+RUN echo "exec zsh" >> ~/.bashrc
+
+# Install Neovim plugin manager (vim-plug)
+RUN curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+# Copy Neovim configuration
+COPY .config/nvim/init.vim /root/.config/nvim/init.vim
+
+# Install Neovim plugins
+RUN nvim --headless +PlugInstall +qall
+
+# MetaGPT Setup
+RUN mkdir -p /opt/metagpt/{config,workspace}
+COPY config2.yaml /opt/metagpt/config/config2.yaml
+
+# Set working directory for development
+WORKDIR /workspace
+
+# Set Zsh as the default shell
+SHELL ["/bin/zsh", "-c"]
+
+# Command to run when starting the container
+CMD ["tail", "-f", "/dev/null"]
