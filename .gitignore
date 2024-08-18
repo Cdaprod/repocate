@@ -1,0 +1,23 @@
+# Binaries
+/build/
+/bin/
+/*.exe
+/*.dll
+/*.so
+/*.dylib
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Logs
+/logs/
+/*.log
+
+# Dependency directories
+/vendor/
+
+# Go specific
+*.test
+*.out
+*.exe
