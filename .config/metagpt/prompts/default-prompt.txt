@@ -1,0 +1,1 @@
+Generate a project structure for a web application using Flask.
