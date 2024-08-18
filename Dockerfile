@@ -70,6 +70,16 @@ RUN . $NVM_DIR/nvm.sh \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
+# Set up persistent history
+RUN mkdir -p /root/.persistent_history \
+    && touch /root/.persistent_history/.zsh_history \
+    && chmod 644 /root/.persistent_history/.zsh_history \
+    && echo 'export HISTFILE=/root/.persistent_history/.zsh_history' >> /root/.zshrc \
+    && echo 'export HISTSIZE=10000' >> /root/.zshrc \
+    && echo 'export SAVEHIST=10000' >> /root/.zshrc \
+    && echo 'setopt SHARE_HISTORY' >> /root/.zshrc \
+    && echo 'setopt HIST_IGNORE_ALL_DUPS' >> /root/.zshrc
+
 # Set up Zsh and Oh My Zsh
 RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" \
     && git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions \
