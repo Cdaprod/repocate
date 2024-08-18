@@ -115,6 +115,18 @@ COPY .config/nvim/init.vim /root/.config/nvim/init.vim
 # Install Neovim plugins
 RUN nvim --headless +PlugInstall +qall
 
+# Clone MetaGPT from GitHub and install
+RUN git clone https://github.com/geekan/MetaGPT.git /metagpt
+WORKDIR /metagpt
+RUN pip install --no-cache-dir -r requirements.txt && pip install -e .
+
+# Copy your MetaGPT config files to appropriate directories
+COPY .config/metagpt/config /metagpt/config/
+COPY .config/metagpt/workflow /metagpt/workflow/
+COPY .config/metagpt/tools/libs /metagpt/tools/libs/
+COPY .config/metagpt/roles /metagpt/roles/
+COPY .config/metagpt/prompts /metagpt/prompts/
+
 # Set up working directory
 WORKDIR /workspace
 
