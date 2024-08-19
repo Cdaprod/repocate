@@ -17,7 +17,7 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 # Install basic tools and dependencies
-RUN apt-get update --no-cache && \
+RUN apt-get update && \
     apt-get install -y --no-install-recommends git curl wget zsh && \
     apt-get install -y --no-install-recommends neovim ripgrep fd-find tmux fzf unzip && \
     apt-get install -y --no-install-recommends python3 python3-pip python3-dev protobuf-compiler && \
