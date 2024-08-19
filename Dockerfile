@@ -1,5 +1,8 @@
 # Start from Ubuntu 22.04 base image
-FROM ubuntu:22.04
+#FROM ubuntu:22.04
+
+# For WSL...
+FROM --platform=linux/arm64 ubuntu:22.04
 
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive
@@ -13,6 +16,8 @@ ARG NVM_DIR=/root/.nvm
 ARG NODE_VERSION=16.15.1
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
+ENV GOARCH=arm64
+ENV GOOS=linux
 
 # Install basic tools and dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
