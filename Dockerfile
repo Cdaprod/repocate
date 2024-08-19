@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     python3 \
     python3-pip \
+    python3-dev \
     protobuf-compiler \
     build-essential \
     software-properties-common \
@@ -127,7 +128,7 @@ WORKDIR /metagpt
 RUN pip install --no-cache-dir -r requirements.txt && pip install -e .
 
 # Copy your MetaGPT config files to appropriate directories
-COPY .config/metagpt/config /metagpt/config/
+COPY .config/metagpt/config /root/.metagpt/
 COPY .config/metagpt/workspace /metagpt/workspace/
 COPY .config/metagpt/tools /metagpt/tools/
 COPY .config/metagpt/roles /metagpt/roles/
