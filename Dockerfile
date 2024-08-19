@@ -2,7 +2,8 @@
 #FROM ubuntu:22.04
 
 # For WSL...
-FROM --platform=linux/arm64 ubuntu:22.04
+#FROM --platform=linux/arm64 ubuntu:22.04
+FROM --platform=linux/arm64 arm64v8/ubuntu:22.04
 
 # Avoid prompts from apt
 ENV DEBIAN_FRONTEND=noninteractive
