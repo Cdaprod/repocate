@@ -17,26 +17,12 @@ ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
 
 # Install basic tools and dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    curl \
-    wget \
-    zsh \
-    neovim \
-    ripgrep \
-    fd-find \
-    tmux \
-    fzf \
-    unzip \
-    python3 \
-    python3-pip \
-    python3-dev \
-    protobuf-compiler \
-    build-essential \
-    software-properties-common \
-    locales \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update --no-cache && \
+    apt-get install -y --no-install-recommends git curl wget zsh && \
+    apt-get install -y --no-install-recommends neovim ripgrep fd-find tmux fzf unzip && \
+    apt-get install -y --no-install-recommends python3 python3-pip python3-dev protobuf-compiler && \
+    apt-get install -y --no-install-recommends build-essential software-properties-common locales ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the locale
 RUN locale-gen en_US.UTF-8
