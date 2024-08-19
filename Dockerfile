@@ -122,8 +122,8 @@ RUN pip install --no-cache-dir -r requirements.txt && pip install -e .
 
 # Copy your MetaGPT config files to appropriate directories
 COPY .config/metagpt/config /metagpt/config/
-COPY .config/metagpt/workflow /metagpt/workflow/
-COPY .config/metagpt/tools/libs /metagpt/tools/libs/
+COPY .config/metagpt/workspace /metagpt/workspace/
+COPY .config/metagpt/tools /metagpt/tools/
 COPY .config/metagpt/roles /metagpt/roles/
 COPY .config/metagpt/prompts /metagpt/prompts/
 
