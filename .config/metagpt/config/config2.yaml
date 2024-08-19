@@ -5,5 +5,5 @@ llm:
   api_key: "YOUR_API_KEY"
 
 workspace:
-  base_dir: "/metagpt/workspace"
+  base_dir: "/workspace"
   cleanup: true
