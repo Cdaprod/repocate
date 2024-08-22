@@ -1,13 +1,32 @@
-# Build stage
-FROM golang:1.20-alpine AS builder
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -o repocate ./cmd/repocate
+# Use a multi-stage build to build the binary
+FROM --platform=$BUILDPLATFORM golang:1.19-alpine AS builder
 
-# Final stage
-FROM alpine:latest
-WORKDIR /root/
+# Set the work directory
+WORKDIR /app
+
+# Copy the Go modules manifests
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the rest of the source code
+COPY . .
+
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -o /app/repocate ./cmd/main
+
+# Use a lightweight base image for the final container
+FROM alpine:3.18
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the binary from the builder stage
 COPY --from=builder /app/repocate .
+
+# Expose the port if the application serves HTTP or similar
+# EXPOSE 8080
+
+# Command to run the binary
 ENTRYPOINT ["./repocate"]
