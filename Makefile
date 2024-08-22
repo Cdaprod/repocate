@@ -4,6 +4,8 @@ BUILD_DIR = ./build
 BIN_DIR = ./bin
 SRC_DIR = ./cmd/main
 INSTALL_DIR = /usr/local/bin
+MAN_DIR = /usr/local/share/man/man1
+MAN_PAGE = repocate.1
 
 # Go-related variables
 GO = go
@@ -27,10 +29,12 @@ build: clean
 	@$(GO) build $(GO_FLAGS) $(BUILD_FLAGS) $(BIN_DIR)/$(PROJECT_NAME) $(SRC_DIR)
 	@echo "Build complete."
 
-# Install the binary to /usr/local/bin
+# Install the binary and man page to their respective directories
 install: build
 	@echo "Installing $(PROJECT_NAME)..."
 	@sudo install -m 0755 $(BIN_DIR)/$(PROJECT_NAME) $(INSTALL_DIR)
+	@echo "Installing man page..."
+	@sudo install -Dm644 $(MAN_PAGE) $(MAN_DIR)/$(MAN_PAGE)
 	@echo "Install complete."
 
 # Test the project

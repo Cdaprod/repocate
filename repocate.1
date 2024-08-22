@@ -1,43 +1,72 @@
-.TH REPOCATE 1 "August 2024" "Version 1.3.0" "User Commands"
+.TH REPOCATE 1 "August 2024" "Version 3.0.0" "User Commands"
 .SH NAME
-repocate \- manage development environments using Docker containers
+repocate \- A tool for managing development environments using Docker containers
+
 .SH SYNOPSIS
 .B repocate
-.I COMMAND
-[ARGUMENTS]
+.RI [ command ]
+.RI [ options ]
+
 .SH DESCRIPTION
-.B repocate
-is a tool for managing isolated development environments for different Git repositories using Docker containers.
+.B Repocate
+is a command-line tool designed to simplify the process of managing isolated development environments using Docker containers. It allows you to clone repositories, create development containers, enter containers, and manage them efficiently.
+
 .SH COMMANDS
 .TP
-.B create <repo-url>
-Clone the repository and create or start a development container for it.
+.BI "repocate create " "[repository URL or name]"
+Clone a repository and create/start a development container for it.
+
 .TP
-.B enter <repo-url>
-Enter an existing development container for the specified repository.
+.BI "repocate clone " "[repository URL]"
+Clone a repository into the workspace directory.
+
 .TP
-.B stop <repo-url>
+.BI "repocate enter " "[repository URL or name]"
+Enter the development container for the specified repository.
+
+.TP
+.BI "repocate stop " "[repository URL or name]"
 Stop the development container for the specified repository.
+
 .TP
-.B rebuild <repo-url>
+.BI "repocate rebuild " "[repository URL or name]"
 Rebuild the development container for the specified repository.
+
 .TP
-.B list
-List all repocate containers.
+.BI "repocate list"
+List all containers managed by repocate.
+
 .TP
-.B version
-Show the version of repocate.
+.BI "repocate version"
+Show version information for repocate.
+
 .TP
-.B help
-Show usage information.
-.SH FILES
+.BI "repocate help"
+Show help information about repocate commands.
+
+.SH OPTIONS
 .TP
-.I ~/.config/repocate/config
-Configuration file for repocate.
+.B \-h, \-\-help
+Display help information about the command.
+
+.SH EXAMPLES
 .TP
-.I ~/.config/repocate/repocate.log
-Log file for repocate operations.
+.B repocate create https://github.com/cdaprod/repocate
+Clone the repository and create/start a development container for it.
+
+.TP
+.B repocate enter repocate
+Enter the development container for the "repocate" repository.
+
+.TP
+.B repocate list
+List all containers managed by repocate.
+
 .SH AUTHOR
-Written by Your Name <your.email@example.com>
-.SH SEE ALSO
-docker(1), git(1)
+Repocate was developed by David Cannan (Cdaprod) as a solution for streamlined development environment management using Docker containers.
+
+.SH BUGS
+For bug reports, please visit the GitHub issues page: https://github.com/cdaprod/repocate/issues
+
+.SH COPYRIGHT
+Repocate is released under the MIT License.
