@@ -1,0 +1,18 @@
+{
+  "editor.fontSize": 14,
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "terminal.integrated.shell.linux": "/bin/zsh",
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": true,
+    "scminput": false
+  },
+  "jupyter.askForKernelRestart": false,
+  "python.dataScience.runStartupCommands": "",
+  "python.languageServer": "Pylance",
+  "jupyter.jupyterServerType": "local"
+}

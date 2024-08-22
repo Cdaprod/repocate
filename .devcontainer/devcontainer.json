@@ -1,0 +1,37 @@
+{
+  "name": "Repocate Development Container",
+  "build": {
+    "dockerfile": "Dockerfile.multiarch",
+    "context": ".."
+  },
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/zsh",
+    "editor.fontSize": 14,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "extensions": [
+    "github.copilot",
+    "ms-python.python",
+    "VisualStudioExptTeam.vscodeintellicode",
+    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "ms-azuretools.vscode-docker",
+    "ms-vsliveshare.vsliveshare",
+    "streetsidesoftware.code-spell-checker",
+    "coenraads.bracket-pair-colorizer-2"
+  ],
+  "postCreateCommand": "yarn install",
+  "remoteUser": "root",
+  "forwardPorts": [
+    3000,  // Example port for a web app
+    8080,  // Example port for API server
+    9229   // Example port for Node.js debugging
+  ],
+  "mounts": [
+    "source=/path/to/your/.config/vscode,target=/root/.config/vscode,type=bind"
+  ],
+  "remoteEnv": {
+    "NVM_DIR": "/root/.nvm"
+  }
+}

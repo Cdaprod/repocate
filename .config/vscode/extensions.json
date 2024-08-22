@@ -1,0 +1,36 @@
+{
+  "recommendations": [
+    // AI Code Assistants
+    "github.copilot",  // GitHub Copilot for AI-powered code completions
+    "ms-python.python",  // Python development, crucial for AI and ML projects
+    "VisualStudioExptTeam.vscodeintellicode",  // IntelliCode for AI-assisted code suggestions
+
+    // Git Integration
+    "eamodio.gitlens",  // GitLens for advanced Git insights and annotations
+
+    // Code Quality and Formatting
+    "esbenp.prettier-vscode",  // Prettier for consistent code formatting
+    "dbaeumer.vscode-eslint",  // ESLint for identifying and fixing linting issues
+
+    // Productivity Enhancers
+    "streetsidesoftware.code-spell-checker",  // Code Spell Checker for catching typos in code
+    "formulahendry.auto-rename-tag",  // Automatically rename paired HTML/XML tags
+    "aaron-bond.better-comments",  // Enhance the readability of comments
+    "mikestead.dotenv",  // Support for .env files
+    "esbenp.prettier-vscode",  // Ensure consistent formatting across multiple languages
+
+    // Development Tools
+    "mhutchie.git-graph",  // Visualize your Git repository in a graph
+    "ms-azuretools.vscode-docker",  // Manage Docker containers directly from VS Code
+    "ms-vsliveshare.vsliveshare",  // Live Share for collaborative coding
+
+    // Code Navigation and Refactoring
+    "coenraads.bracket-pair-colorizer-2",  // Colorize matching brackets for easier navigation
+    "gruntfuggly.todo-tree",  // Highlight and manage TODO comments in your code
+
+    // Security Tools
+    "gitlab.gitlab-workflow",  // Integrate GitLab with VS Code
+    "timonwong.shellcheck",  // ShellCheck for linting shell scripts
+    "yzhang.markdown-all-in-one"  // Markdown All in One for improved Markdown editing
+  ]
+}
