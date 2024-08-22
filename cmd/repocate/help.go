@@ -1,4 +1,5 @@
-package help
+// cmd/repocate/help
+package repocate
 
 import (
     "github.com/spf13/cobra"

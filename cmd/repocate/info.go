@@ -1,18 +1,23 @@
-package info
+package repocate
 
 import (
     "fmt"
     "github.com/spf13/cobra"
-    "repocate/internal/container"
+    "github.com/cdaprod/repocate/internal/container"
 )
 
 var ListCmd = &cobra.Command{
     Use:   "list",
     Short: "List all repocate containers.",
     Run: func(cmd *cobra.Command, args []string) {
-        err := container.ListContainers()
+        containers, err := container.ListContainers()
         if err != nil {
             fmt.Println("Error listing containers:", err)
+            return
+        }
+
+        for _, c := range containers {
+            fmt.Println(c) // Assuming `c` has a `String` method or implement a way to print the container information
         }
     },
 }

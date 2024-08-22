@@ -2,9 +2,7 @@ package repocate
 
 import (
     "github.com/spf13/cobra"
-    "repocate/cmd/repocate/container"
-    "repocate/cmd/repocate/info"
-    "repocate/cmd/repocate/help"
+    //cont "github.com/cdaprod/repocate/cmd/repocate" // Import with alias
 )
 
 // rootCmd is the root command for the CLI
@@ -20,11 +18,12 @@ func Execute() error {
 }
 
 func init() {
-    rootCmd.AddCommand(container.CreateCmd)
-    rootCmd.AddCommand(container.EnterCmd)
-    rootCmd.AddCommand(container.StopCmd)
-    rootCmd.AddCommand(container.RebuildCmd)
-    rootCmd.AddCommand(info.ListCmd)
-    rootCmd.AddCommand(info.VersionCmd)
-    rootCmd.AddCommand(help.HelpCmd)
+    rootCmd.AddCommand(CreateCmd)
+    rootCmd.AddCommand(EnterCmd)
+    rootCmd.AddCommand(StopCmd)
+    rootCmd.AddCommand(RebuildCmd)
+    rootCmd.AddCommand(CloneCmd)
+    rootCmd.AddCommand(ListCmd)
+    rootCmd.AddCommand(VersionCmd)
+    rootCmd.AddCommand(HelpCmd)
 }

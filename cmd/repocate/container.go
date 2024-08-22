@@ -1,11 +1,15 @@
-package container
+package repocate
 
 import (
-    "fmt"
     "github.com/spf13/cobra"
-    "repocate/internal/container"
-    "repocate/internal/config"
-    "repocate/internal/log"
+    cont "github.com/cdaprod/repocate/internal/container" // Alias to avoid conflict
+    "github.com/cdaprod/repocate/internal/utils"
+    "github.com/cdaprod/repocate/internal/config"
+    "github.com/cdaprod/repocate/internal/log"
+    "github.com/cdaprod/repocate/internal/git"
+    "fmt"
+    "os"
+    "path/filepath"
 )
 
 var CreateCmd = &cobra.Command{
@@ -17,28 +21,66 @@ var CreateCmd = &cobra.Command{
         config.LoadConfig()
         log.SetupLogger()
 
-        repoName, err := container.ResolveRepoName(repoInput)
+        // Resolve repository name and paths
+        repoName, err := utils.ExtractRepoName(repoInput)
         if err != nil {
-            log.Error(err)
+            log.Error(fmt.Sprintf("Failed to extract repo name: %s", err))
             return
         }
 
-        if !container.IsRepoCloned(config.WorkspaceDir, repoName) {
-            err = container.CloneRepository(config.WorkspaceDir, repoInput)
+        repoPath := filepath.Join(config.WorkspaceDir, repoName)
+
+        // Clone the repository if not already cloned
+        if !utils.IsRepoCloned(config.WorkspaceDir, repoName) {
+            err = git.CloneRepository(config.WorkspaceDir, repoInput)
             if err != nil {
-                log.Error(err)
+                log.Error(fmt.Sprintf("Failed to clone repository: %s", err))
                 return
             }
         }
 
-        err = container.InitContainer(config.WorkspaceDir, repoName)
-        if err != nil {
-            log.Error(err)
+        // Handle Dockerfile for repocate-default or custom projects
+        if repoName == "repocate-default" {
+            log.Info("Using Dockerfile.multiarch for repocate-default.")
+            // Add logic here to ensure the Dockerfile.multiarch is used
+        } else {
+            log.Info(fmt.Sprintf("Using Dockerfile for repository %s.", repoName))
+            dockerfilePath := filepath.Join(repoPath, "Dockerfile")
+            if _, err := os.Stat(dockerfilePath); os.IsNotExist(err) {
+                log.Error("Dockerfile not found in the cloned repository.")
+                return
+            }
         }
+
+        // Initialize the Docker container
+        err = cont.InitContainer(config.WorkspaceDir, repoName)
+        if err != nil {
+            log.Error(fmt.Sprintf("Failed to initialize container: %s", err))
+            return
+        }
+
+        log.Info("Project environment created successfully.")
     },
 }
 
-// Similarly define EnterCmd, StopCmd, RebuildCmd in this file.
+var CloneCmd = &cobra.Command{
+    Use:   "clone [repository URL]",
+    Short: "Clone a repository.",
+    Args:  cobra.ExactArgs(1),
+    Run: func(cmd *cobra.Command, args []string) {
+        repoURL := args[0]
+        config.LoadConfig()
+        log.SetupLogger()
+
+        err := git.CloneRepository(config.WorkspaceDir, repoURL)
+        if err != nil {
+            log.Error(fmt.Sprintf("Failed to clone repository: %s", err))
+            return
+        }
+
+        log.Info("Repository cloned successfully.")
+    },
+}
 
 var EnterCmd = &cobra.Command{
     Use:   "enter [repository URL or name]",
@@ -49,17 +91,59 @@ var EnterCmd = &cobra.Command{
         config.LoadConfig()
         log.SetupLogger()
 
-        repoName, err := container.ResolveRepoName(repoInput)
+        repoName, err := utils.ExtractRepoName(repoInput)
         if err != nil {
-            log.Error(err)
+            log.Error(err.Error())
             return
         }
 
-        err = container.EnterContainer(config.WorkspaceDir, repoName)
+        err = cont.EnterContainer(config.WorkspaceDir, repoName)
         if err != nil {
-            log.Error(err)
+            log.Error(err.Error())
         }
     },
 }
 
-// StopCmd and RebuildCmd follow the same pattern.
+var StopCmd = &cobra.Command{
+    Use:   "stop [repository URL or name]",
+    Short: "Stop the development container for a specific repo.",
+    Args:  cobra.ExactArgs(1),
+    Run: func(cmd *cobra.Command, args []string) {
+        repoInput := args[0]
+        config.LoadConfig()
+        log.SetupLogger()
+
+        repoName, err := utils.ExtractRepoName(repoInput)
+        if err != nil {
+            log.Error(err.Error())
+            return
+        }
+
+        err = cont.StopContainer(config.WorkspaceDir, repoName)
+        if err != nil {
+            log.Error(err.Error())
+        }
+    },
+}
+
+var RebuildCmd = &cobra.Command{
+    Use:   "rebuild [repository URL or name]",
+    Short: "Rebuild the development container for a specific repo.",
+    Args:  cobra.ExactArgs(1),
+    Run: func(cmd *cobra.Command, args []string) {
+        repoInput := args[0]
+        config.LoadConfig()
+        log.SetupLogger()
+
+        repoName, err := utils.ExtractRepoName(repoInput)
+        if err != nil {
+            log.Error(err.Error())
+            return
+        }
+
+        err = cont.RebuildContainer(config.WorkspaceDir, repoName)
+        if err != nil {
+            log.Error(err.Error())
+        }
+    },
+}

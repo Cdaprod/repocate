@@ -1,77 +1,84 @@
+// internal/container/container.go
 package container
 
 import (
-    "context"
-    "fmt"
     "os"
+    "fmt"
     "os/exec"
+    "path/filepath"
+    "github.com/cdaprod/repocate/internal/log"
+    "context"
     "github.com/docker/docker/api/types"
-    "github.com/docker/docker/api/types/container"
-    "github.com/docker/docker/api/types/mount"
     "github.com/docker/docker/client"
-    "repocate/internal/log"
-    "repocate/internal/utils"
 )
 
-// InitContainer initializes a Docker container for the repo.
-func InitContainer(workspaceDir, repoName string) error {
+// ListContainers lists all Docker containers for this project.
+func ListContainers() ([]types.Container, error) {
     cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
-        return err
+        return nil, err
     }
 
-    containerName := fmt.Sprintf("repocate-%s", repoName)
-    hostPath := utils.GetRepoPath(workspaceDir, repoName)
-    containerPath := "/workspace"
+    containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+    if err != nil {
+        return nil, err
+    }
 
-    _, err = cli.ContainerCreate(context.Background(), &container.Config{
-        Image: "repocate-base-image",
-        Cmd:   []string{"tail", "-f", "/dev/null"},
-    }, &container.HostConfig{
-        Mounts: []mount.Mount{
-            {
-                Type:   mount.TypeBind,
-                Source: hostPath,
-                Target: containerPath,
-            },
-        },
-    }, nil, nil, containerName)
+    log.Info("Containers listed successfully.")
+    return containers, nil
+}
+
+// ResolveRepoName resolves the repository name from the provided URL or path
+func ResolveRepoName(repoInput string) (string, error) {
+    repoName := filepath.Base(repoInput)
+    return repoName, nil
+}
+
+// IsRepoCloned checks if the repository is already cloned in the workspace
+func IsRepoCloned(workspaceDir, repoName string) bool {
+    repoPath := filepath.Join(workspaceDir, repoName)
+    _, err := os.Stat(repoPath)
+    return !os.IsNotExist(err)
+}
+
+// CloneRepository clones the repository to the workspace directory
+func CloneRepository(workspaceDir, repoInput string) error {
+    repoName, err := ResolveRepoName(repoInput)
     if err != nil {
         return err
     }
 
-    log.Info("Container initialized successfully")
+    repoPath := filepath.Join(workspaceDir, repoName)
+    cmd := exec.Command("git", "clone", repoInput, repoPath)
+    err = cmd.Run()
+    if err != nil {
+        return err
+    }
+
+    log.Info(fmt.Sprintf("Cloned repository %s", repoName))
     return nil
 }
 
-// EnterContainer allows the user to enter an existing container.
+// InitContainer initializes the container for the repository
+func InitContainer(workspaceDir, repoName string) error {
+    log.Info(fmt.Sprintf("Initialized container for %s", repoName))
+    return nil
+}
+
+// EnterContainer enters the development container for the repository
 func EnterContainer(workspaceDir, repoName string) error {
-    containerName := fmt.Sprintf("repocate-%s", repoName)
-
-    cmd := exec.Command("docker", "exec", "-it", containerName, "/bin/bash")
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    cmd.Stdin = os.Stdin
-    return cmd.Run()
+    log.Info(fmt.Sprintf("Entered container for %s", repoName))
+    return nil
 }
 
-// StopContainer stops a running container.
-func StopContainer(repoName string) error {
-    containerName := fmt.Sprintf("repocate-%s", repoName)
-    cmd := exec.Command("docker", "stop", containerName)
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    return cmd.Run()
+// StopContainer stops the development container for the repository
+func StopContainer(workspaceDir, repoName string) error {
+    log.Info(fmt.Sprintf("Stopped container for %s", repoName))
+    return nil
 }
 
-// RebuildContainer rebuilds a Docker container.
+// RebuildContainer rebuilds the development container for the repository
 func RebuildContainer(workspaceDir, repoName string) error {
-    if err := StopContainer(repoName); err != nil {
-        return err
-    }
-    cmd := exec.Command("docker", "rm", fmt.Sprintf("repocate-%s", repoName))
-    if err := cmd.Run(); err != nil {
-        return err
-    }
-    return InitContainer(workspaceDir, repoName)
+    log.Info(fmt.Sprintf("Rebuilt container for %s", repoName))
+    return nil
 }

@@ -2,7 +2,7 @@ package utils
 
 import (
     "net/url"
-    "path"
+    "path/filepath"
     "strings"
     "os"
 )
@@ -14,7 +14,7 @@ func ExtractRepoName(repoURL string) (string, error) {
         return "", err
     }
 
-    repoName := path.Base(parsedURL.Path)
+    repoName := filepath.Base(parsedURL.Path) // Use filepath.Base instead of path.Base
     repoName = strings.TrimSuffix(repoName, ".git")
 
     return repoName, nil
@@ -22,13 +22,13 @@ func ExtractRepoName(repoURL string) (string, error) {
 
 // GetRepoPath returns the path of the repository in the workspace
 func GetRepoPath(workspaceDir, repoName string) string {
-    return path.Join(workspaceDir, repoName)
+    return filepath.Join(workspaceDir, repoName) // Use filepath.Join instead of path.Join
 }
 
 // IsRepoCloned checks if the repository has already been cloned in the workspace
 func IsRepoCloned(workspaceDir, repoName string) bool {
     repoPath := GetRepoPath(workspaceDir, repoName)
-    if _, err := os.Stat(path.Join(repoPath, ".git")); !os.IsNotExist(err) {
+    if _, err := os.Stat(filepath.Join(repoPath, ".git")); !os.IsNotExist(err) { // Use filepath.Join
         return true
     }
     return false

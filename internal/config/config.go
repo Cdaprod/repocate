@@ -5,7 +5,7 @@ import (
     "path/filepath"
     "encoding/json"
     "fmt"
-    "repocate/internal/log"
+    "github.com/cdaprod/repocate/internal/log"
 )
 
 var (

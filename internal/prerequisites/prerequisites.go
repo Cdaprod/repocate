@@ -1,8 +1,9 @@
 package prerequisites
 
 import (
+    "fmt"
     "os/exec"
-    "repocate/internal/log"
+    "github.com/cdaprod/repocate/internal/log"
 )
 
 // CheckAndInstall checks for prerequisites like Docker and Git
