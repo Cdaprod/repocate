@@ -21,8 +21,11 @@ type Config struct {
 // LoadConfig loads configuration from the config file
 func LoadConfig() {
     configPath := filepath.Join(getConfigDir(), ConfigFile)
+    fmt.Println("Config path:", configPath)
+
     file, err := os.Open(configPath)
     if err != nil {
+        fmt.Println("Error opening config file:", err)
         log.Error(fmt.Sprintf("Could not open config file: %s", err))
         os.Exit(1)
     }
@@ -31,10 +34,18 @@ func LoadConfig() {
     decoder := json.NewDecoder(file)
     config := Config{}
     if err := decoder.Decode(&config); err != nil {
+        fmt.Println("Error decoding config file:", err)
         log.Error(fmt.Sprintf("Error decoding config file: %s", err))
         os.Exit(1)
     }
 
+    if config.WorkspaceDir == "" {
+        fmt.Println("Workspace directory not set in config.")
+        log.Error("Workspace directory is not set.")
+        os.Exit(1)
+    }
+
+    fmt.Println("Workspace directory set to:", config.WorkspaceDir)
     WorkspaceDir = config.WorkspaceDir
 }
 
