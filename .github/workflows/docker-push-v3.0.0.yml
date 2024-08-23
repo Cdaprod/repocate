@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DOCKER_CLI_EXPERIMENTAL: enabled
+    strategy:
+      matrix:
+        arch: [amd64, arm64]  # Define architectures here
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -34,7 +38,11 @@ jobs:
         with:
           context: .
           file: Dockerfile.repocate.package
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/${{ matrix.arch }}
           push: true
           tags: |
             cdaprod/repocate:v3.0.0-${{ matrix.arch }}
+
+      - name: Post Log in to Docker Hub
+        if: always()
+        uses: docker/logout-action@v2
