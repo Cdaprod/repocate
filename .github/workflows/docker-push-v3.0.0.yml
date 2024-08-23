@@ -37,4 +37,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USER }}/repocate:v3.0.0-${{ matrix.arch }}
+            cdaprod/repocate:v3.0.0-${{ matrix.arch }}
