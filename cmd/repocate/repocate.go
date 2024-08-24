@@ -3,6 +3,7 @@ package repocate
 import (
     "fmt"
     "os"
+    "time"
     "github.com/spf13/cobra"
     "github.com/fatih/color"
     "github.com/schollz/progressbar/v3"
@@ -73,21 +74,7 @@ func init() {
 func handleDefaultContainer() {
     color.Cyan("Checking for 'repocate-default' container...")
 
-    bar := progressbar.NewOptions(100,
-        progressbar.OptionSetDescription("[green]Checking container status...[reset]"),
-        progressbar.OptionSetWriter(os.Stderr),
-        progressbar.OptionShowBytes(false),
-        progressbar.OptionShowCount(),
-        progressbar.OptionOnCompletion(func() {
-            fmt.Fprint(os.Stderr, "\n")
-        }),
-    )
-
-    // Simulate progress for checking container status
-    for i := 0; i < 100; i++ {
-        bar.Add(1)
-        time.Sleep(10 * time.Millisecond)
-    }
+    showProgress("Checking container status...", 100)
 
     // Check if the default container exists
     containerExists, err := container.CheckContainerExists("repocate-default")
@@ -98,24 +85,13 @@ func handleDefaultContainer() {
 
     if !containerExists {
         color.Yellow("Default container 'repocate-default' not found. Creating it now...")
+        showProgress("Creating container...", 100)
 
-        // Show progress for container creation
-        bar = progressbar.NewOptions(100,
-            progressbar.OptionSetDescription("[green]Creating container...[reset]"),
-            progressbar.OptionSetWriter(os.Stderr),
-            progressbar.OptionShowBytes(false),
-            progressbar.OptionShowCount(),
-            progressbar.OptionOnCompletion(func() {
-                fmt.Fprint(os.Stderr, "\n")
-            }),
-        )
+        // Specify image name and command for container creation
+        imageName := "cdaprod/repocate-dev:v1.0.0-arm64" // Example image name
+        cmd := []string{"/bin/zsh"} // Default command to run in the container
 
-        for i := 0; i < 100; i++ {
-            bar.Add(1)
-            time.Sleep(10 * time.Millisecond)
-        }
-
-        err := container.CreateAndStartContainer("repocate-default")
+        err := container.CreateAndStartContainer("repocate-default", imageName, cmd)
         if err != nil {
             fmt.Println(color.RedString("Error creating default container: %s", err))
             os.Exit(1)
@@ -123,26 +99,30 @@ func handleDefaultContainer() {
         fmt.Println(color.GreenString("Default container 'repocate-default' created and started."))
     } else {
         color.Green("Default container 'repocate-default' exists. Executing into it now...")
-
-        bar = progressbar.NewOptions(100,
-            progressbar.OptionSetDescription("[green]Executing into container...[reset]"),
-            progressbar.OptionSetWriter(os.Stderr),
-            progressbar.OptionShowBytes(false),
-            progressbar.OptionShowCount(),
-            progressbar.OptionOnCompletion(func() {
-                fmt.Fprint(os.Stderr, "\n")
-            }),
-        )
-
-        for i := 0; i < 100; i++ {
-            bar.Add(1)
-            time.Sleep(10 * time.Millisecond)
-        }
+        showProgress("Executing into container...", 100)
 
         err := container.ExecIntoContainer("repocate-default")
         if err != nil {
             fmt.Println(color.RedString("Error executing into default container: %s", err))
             os.Exit(1)
         }
+    }
+}
+
+// New function to show progress for any operation
+func showProgress(description string, steps int) {
+    bar := progressbar.NewOptions(steps,
+        progressbar.OptionSetDescription(fmt.Sprintf("[green]%s...[reset]", description)),
+        progressbar.OptionSetWriter(os.Stderr),
+        progressbar.OptionShowBytes(false),
+        progressbar.OptionShowCount(),
+        progressbar.OptionOnCompletion(func() {
+            fmt.Fprint(os.Stderr, "\n")
+        }),
+    )
+
+    for i := 0; i < steps; i++ {
+        bar.Add(1)
+        time.Sleep(10 * time.Millisecond) // Adjust this delay to simulate progress
     }
 }
