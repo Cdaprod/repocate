@@ -12,6 +12,7 @@ import (
     "github.com/docker/docker/api/types"
     "github.com/docker/docker/api/types/container"
     "github.com/docker/docker/client"
+    "github.com/fatih/color"
 )
 
 // initializeDockerClient initializes the Docker client and handles any errors.
@@ -268,6 +269,50 @@ func PullImage(imageName string) error {
     log.Info(fmt.Sprintf("Pulling image %s...", imageName))
     io.Copy(os.Stdout, out)
 
+    return nil
+}
+
+// IsContainerRunning checks if a Docker container with a specific name is running.
+func IsContainerRunning(containerName string) (bool, error) {
+    cli, err := initializeDockerClient()
+    if err != nil {
+        return false, err
+    }
+    defer cli.Close()
+
+    ctx := context.Background()
+
+    // Get container details
+    containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+    if err != nil {
+        return false, err
+    }
+
+    for _, c := range containers {
+        if c.Names[0] == "/"+containerName && c.State == "running" {
+            return true, nil
+        }
+    }
+
+    return false, nil
+}
+
+// StartContainer starts a Docker container with a specific name.
+func StartContainer(containerName string) error {
+    cli, err := initializeDockerClient()
+    if err != nil {
+        return err
+    }
+    defer cli.Close()
+
+    ctx := context.Background()
+
+    // Start the container
+    if err := cli.ContainerStart(ctx, containerName, types.ContainerStartOptions{}); err != nil {
+        return err
+    }
+
+    log.Info(fmt.Sprintf("Container %s started successfully.", containerName))
     return nil
 }
 

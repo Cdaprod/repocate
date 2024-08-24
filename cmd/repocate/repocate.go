@@ -76,7 +76,7 @@ func handleDefaultContainer() {
     showProgress("Checking container status...", 100)
 
     // Initialize the default container
-    err := container.InitRepocateDefaultContainer()
+    err := InitRepocateDefaultContainer()
     if err != nil {
         fmt.Println(color.RedString("Error initializing 'repocate-default' container: %s", err))
         os.Exit(1)
@@ -85,7 +85,7 @@ func handleDefaultContainer() {
     color.Green("Checking status of the 'repocate-default' container...")
 
     // Check if the container is running
-    isRunning, err := container.IsContainerRunning("repocate-default")
+    isRunning, err := IsContainerRunning("repocate-default")
     if err != nil {
         fmt.Println(color.RedString("Error checking container status: %s", err))
         os.Exit(1)
@@ -94,7 +94,7 @@ func handleDefaultContainer() {
     if !isRunning {
         color.Yellow("Container 'repocate-default' is not running. Starting it now...")
 
-        err := container.StartContainer("repocate-default")
+        err := StartContainer("repocate-default")
         if err != nil {
             fmt.Println(color.RedString("Error starting container: %s", err))
             os.Exit(1)
@@ -104,7 +104,7 @@ func handleDefaultContainer() {
     color.Green("Executing into the 'repocate-default' container now...")
     showProgress("Executing into container...", 100)
 
-    err = container.ExecIntoContainer("repocate-default")
+    err = ExecIntoContainer("repocate-default")
     if err != nil {
         fmt.Println(color.RedString("Error executing into default container: %s", err))
         os.Exit(1)
