@@ -47,7 +47,7 @@ COPY .config/zsh/custom_plugins.zsh /root/.oh-my-zsh/custom/custom_plugins.zsh
 # Define the working directory
 WORKDIR /workspace
 # Set entrypoint to a script that will run the desired shell
-COPY entrypoint.sh /usr/local/bin/plugin-entrypoint.sh
+COPY plugin-entrypoint.sh /usr/local/bin/plugin-entrypoint.sh
 RUN chmod +x /usr/local/bin/plugin-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/plugin-entrypoint.sh"]
