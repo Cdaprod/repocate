@@ -24,6 +24,30 @@ func initializeDockerClient() (*client.Client, error) {
     return cli, nil
 }
 
+// CheckContainerExists checks if a Docker container with a specific name exists.
+func CheckContainerExists(containerName string) (bool, error) {
+    cli, err := initializeDockerClient()
+    if err != nil {
+        return false, err
+    }
+    defer cli.Close()
+
+    containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+    if err != nil {
+        return false, err
+    }
+
+    for _, c := range containers {
+        for _, name := range c.Names {
+            if name == "/"+containerName {
+                return true, nil
+            }
+        }
+    }
+
+    return false, nil
+}
+
 // ListContainers lists all Docker containers for this project.
 func ListContainers() ([]types.Container, error) {
     cli, err := initializeDockerClient()
@@ -195,9 +219,7 @@ func PullImage(imageName string) error {
     defer out.Close()
 
     log.Info(fmt.Sprintf("Pulling image %s...", imageName))
-    if _, err := io.Copy(os.Stdout, out); err != nil {
-        return fmt.Errorf("failed to read image pull response: %w", err)
-    }
+    io.Copy(os.Stdout, out)
 
     return nil
 }
