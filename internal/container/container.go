@@ -140,7 +140,7 @@ func RebuildContainer(workspaceDir, repoName string) error {
     return nil
 }
 
-// CheckImageExists checks if a Docker image exists locally.
+// CheckImageExists checks if a Docker image with a specific name exists locally.
 func CheckImageExists(imageName string) (bool, error) {
     cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
@@ -148,36 +148,56 @@ func CheckImageExists(imageName string) (bool, error) {
     }
     defer cli.Close()
 
-    _, _, err = cli.ImageInspectWithRaw(context.Background(), imageName)
+    ctx := context.Background()
+
+    _, _, err = cli.ImageInspectWithRaw(ctx, imageName)
     if err == nil {
         // Image already exists locally
+        log.Info(fmt.Sprintf("Image %s already exists locally.", imageName))
         return true, nil
     }
 
     if client.IsErrNotFound(err) {
-        // Image does not exist
+        log.Info(fmt.Sprintf("Image %s not found locally.", imageName))
         return false, nil
     }
 
+    // Handle any other error
     return false, err
 }
 
-// PullImage pulls a Docker image from the registry.
+// PullImage pulls a Docker image, ensuring it is present locally.
 func PullImage(imageName string) error {
     cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
-        return err
+        return fmt.Errorf("failed to create Docker client: %w", err)
     }
     defer cli.Close()
 
-    out, err := cli.ImagePull(context.Background(), imageName, types.ImagePullOptions{})
+    ctx := context.Background()
+
+    // Check if the image exists locally
+    exists, err := CheckImageExists(imageName)
     if err != nil {
-        return err
+        return fmt.Errorf("error checking image existence: %w", err)
+    }
+
+    if exists {
+        log.Info(fmt.Sprintf("Image %s already exists locally. Skipping pull.", imageName))
+        return nil
+    }
+
+    // If image does not exist, pull it
+    out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+    if err != nil {
+        return fmt.Errorf("failed to pull image %s: %w", imageName, err)
     }
     defer out.Close()
 
-    _, err = io.Copy(os.Stdout, out)
-    return err
+    log.Info(fmt.Sprintf("Pulling image %s...", imageName))
+    io.Copy(os.Stdout, out)
+
+    return nil
 }
 
 // CreateAndStartContainer creates and starts a Docker container with a specific name.
