@@ -70,58 +70,44 @@ func init() {
     rootCmd.AddCommand(HelpCmd)
 }
 
-// Function to handle the default container logic
 func handleDefaultContainer() {
     color.Cyan("Checking for 'repocate-default' container...")
 
     showProgress("Checking container status...", 100)
 
-    // Check if the default container exists
-    containerExists, err := container.CheckContainerExists("repocate-default")
+    // Initialize the default container
+    err := container.InitRepocateDefaultContainer()
     if err != nil {
-        fmt.Println(color.RedString("Error checking container: %s", err))
+        fmt.Println(color.RedString("Error initializing 'repocate-default' container: %s", err))
         os.Exit(1)
     }
 
-    if !containerExists {
-        color.Yellow("Default container 'repocate-default' not found. Creating it now...")
+    color.Green("Checking status of the 'repocate-default' container...")
 
-        imageName := "cdaprod/repocate-dev:1.0.0-arm64"
-        cmd := []string{"/bin/zsh"}
+    // Check if the container is running
+    isRunning, err := container.IsContainerRunning("repocate-default")
+    if err != nil {
+        fmt.Println(color.RedString("Error checking container status: %s", err))
+        os.Exit(1)
+    }
 
-        // Check if image exists locally
-        imageExists, err := container.CheckImageExists(imageName)
+    if !isRunning {
+        color.Yellow("Container 'repocate-default' is not running. Starting it now...")
+
+        err := container.StartContainer("repocate-default")
         if err != nil {
-            fmt.Println(color.RedString("Error checking image: %s", err))
+            fmt.Println(color.RedString("Error starting container: %s", err))
             os.Exit(1)
         }
+    }
 
-        if !imageExists {
-            color.Yellow("Image not found locally. Pulling from registry...")
-            showProgress("Pulling image...", 100)
+    color.Green("Executing into the 'repocate-default' container now...")
+    showProgress("Executing into container...", 100)
 
-            if err := container.PullImage(imageName); err != nil {
-                fmt.Println(color.RedString("Error pulling image: %s", err))
-                os.Exit(1)
-            }
-        }
-
-        showProgress("Creating container...", 100)
-        err := container.CreateAndStartContainer("repocate-default", imageName, cmd)
-        if err != nil {
-            fmt.Println(color.RedString("Error creating default container: %s", err))
-            os.Exit(1)
-        }
-        fmt.Println(color.GreenString("Default container 'repocate-default' created and started."))
-    } else {
-        color.Green("Default container 'repocate-default' exists. Executing into it now...")
-        showProgress("Executing into container...", 100)
-
-        err := container.ExecIntoContainer("repocate-default")
-        if err != nil {
-            fmt.Println(color.RedString("Error executing into default container: %s", err))
-            os.Exit(1)
-        }
+    err = container.ExecIntoContainer("repocate-default")
+    if err != nil {
+        fmt.Println(color.RedString("Error executing into default container: %s", err))
+        os.Exit(1)
     }
 }
 
