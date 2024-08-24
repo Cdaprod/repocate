@@ -98,16 +98,22 @@ func EnterContainer(workspaceDir, repoName string) error {
     return ExecIntoContainer(repoName)
 }
 
-// StopContainer stops the development container for the repository.
+// StopContainer stops the development container for the repository
 func StopContainer(workspaceDir, repoName string) error {
-    cli, err := initializeDockerClient()
+    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
         return err
     }
-    defer cli.Close()
 
     ctx := context.Background()
-    if err := cli.ContainerStop(ctx, repoName, nil); err != nil {
+
+    // StopOptions requires a Timeout
+    stopOptions := container.StopOptions{
+        Timeout: nil, // or you can specify a time.Duration value like `new(int)` with a value for timeout in seconds
+    }
+
+    err = cli.ContainerStop(ctx, repoName, stopOptions)
+    if err != nil {
         log.Error(fmt.Sprintf("Failed to stop container %s: %s", repoName, err))
         return err
     }
