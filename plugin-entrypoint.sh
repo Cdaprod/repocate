@@ -54,5 +54,5 @@ fi
 
 echo "Configuration setup complete."
 
-# Start a shell to keep the container running
-exec /bin/zsh
+# keep the container running
+tail -f /dev/null
