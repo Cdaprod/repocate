@@ -10,7 +10,7 @@ import (
 var rootCmd = &cobra.Command{
     Use:   "repocate",
     Short: "Repocate is a tool for managing development environments using Docker containers.",
-    Long:  `Repocate allows you to clone repositories, create isolated development environments, and manage them using Docker containers.`,
+    Long:  color.CyanString("Repocate allows you to clone repositories, create isolated development environments, and manage them using Docker containers."),
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -25,7 +25,8 @@ func Execute() error {
            | |                            
            |_|`)
 
-    fmt.Println(color.HiYellowString("By: David Cannan (Cdaprod)"))
+    fmt.Println(color.HiYellowString("By: David Cannan aka Cdaprod"))
+    fmt.Println()
 
     return rootCmd.Execute()
 }
