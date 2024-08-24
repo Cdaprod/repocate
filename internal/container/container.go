@@ -140,55 +140,44 @@ func RebuildContainer(workspaceDir, repoName string) error {
     return nil
 }
 
-// CheckContainerExists checks if a Docker container with a specific name exists.
-func CheckContainerExists(containerName string) (bool, error) {
+// CheckImageExists checks if a Docker image exists locally.
+func CheckImageExists(imageName string) (bool, error) {
     cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
         return false, err
     }
     defer cli.Close()
 
-    containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
-    if err != nil {
-        return false, err
-    }
-
-    for _, c := range containers {
-        for _, name := range c.Names {
-            if name == "/"+containerName {
-                return true, nil
-            }
-        }
-    }
-
-    return false, nil
-}
-
-// PullImageIfNotExists pulls a Docker image if it is not already present locally.
-func PullImageIfNotExists(imageName string) (bool, error) {
-    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-    if err != nil {
-        return false, err
-    }
-    defer cli.Close()
-
-    ctx := context.Background()
-
-    _, _, err = cli.ImageInspectWithRaw(ctx, imageName)
+    _, _, err = cli.ImageInspectWithRaw(context.Background(), imageName)
     if err == nil {
         // Image already exists locally
         return true, nil
     }
 
-    // If image does not exist, pull it
-    out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+    if client.IsErrNotFound(err) {
+        // Image does not exist
+        return false, nil
+    }
+
+    return false, err
+}
+
+// PullImage pulls a Docker image from the registry.
+func PullImage(imageName string) error {
+    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
-        return false, err
+        return err
+    }
+    defer cli.Close()
+
+    out, err := cli.ImagePull(context.Background(), imageName, types.ImagePullOptions{})
+    if err != nil {
+        return err
     }
     defer out.Close()
 
-    io.Copy(os.Stdout, out)
-    return true, nil
+    _, err = io.Copy(os.Stdout, out)
+    return err
 }
 
 // CreateAndStartContainer creates and starts a Docker container with a specific name.
@@ -201,20 +190,10 @@ func CreateAndStartContainer(containerName, imageName string, cmd []string) erro
 
     ctx := context.Background()
 
-    // Pull the image before creating the container
-    out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
-    if err != nil {
-        log.Error(fmt.Sprintf("Error pulling image %s: %s", imageName, err))
-        return err
-    }
-    defer out.Close()
-    io.Copy(os.Stdout, out) // Output the progress of the image pulling to stdout
-
     // Create Docker container
     resp, err := cli.ContainerCreate(ctx, &container.Config{
         Image: imageName,
         Cmd:   cmd,
-        Tty:   true, // To enable TTY support in the container
     }, nil, nil, nil, containerName)
     if err != nil {
         return err

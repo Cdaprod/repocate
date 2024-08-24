@@ -85,30 +85,34 @@ func handleDefaultContainer() {
 
     if !containerExists {
         color.Yellow("Default container 'repocate-default' not found. Creating it now...")
-        showProgress("Creating container...", 100)
 
-        // Specify image name and command for container creation
-        imageName := "cdaprod/repocate-dev:v1.0.0-arm64"
+        imageName := "cdaprod/repocate-dev:1.0.0-arm64"
         cmd := []string{"/bin/zsh"}
 
-        // Check if the image exists locally or pull it if it doesn't
-        imageExists, err := container.PullImageIfNotExists(imageName)
+        // Check if image exists locally
+        imageExists, err := container.CheckImageExists(imageName)
         if err != nil {
-            fmt.Println(color.RedString("Error pulling image: %s", err))
+            fmt.Println(color.RedString("Error checking image: %s", err))
             os.Exit(1)
         }
 
-        if imageExists {
-            err := container.CreateAndStartContainer("repocate-default", imageName, cmd)
-            if err != nil {
-                fmt.Println(color.RedString("Error creating default container: %s", err))
+        if !imageExists {
+            color.Yellow("Image not found locally. Pulling from registry...")
+            showProgress("Pulling image...", 100)
+
+            if err := container.PullImage(imageName); err != nil {
+                fmt.Println(color.RedString("Error pulling image: %s", err))
                 os.Exit(1)
             }
-            fmt.Println(color.GreenString("Default container 'repocate-default' created and started."))
-        } else {
-            fmt.Println(color.RedString("Failed to find or pull the required Docker image."))
+        }
+
+        showProgress("Creating container...", 100)
+        err := container.CreateAndStartContainer("repocate-default", imageName, cmd)
+        if err != nil {
+            fmt.Println(color.RedString("Error creating default container: %s", err))
             os.Exit(1)
         }
+        fmt.Println(color.GreenString("Default container 'repocate-default' created and started."))
     } else {
         color.Green("Default container 'repocate-default' exists. Executing into it now...")
         showProgress("Executing into container...", 100)
