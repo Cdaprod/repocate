@@ -30,7 +30,6 @@ func InitRepocateDefaultContainer() error {
     containerName := "repocate-default"
     imageName := "cdaprod/repocate-dev:1.0.0-arm64"
 
-    // Check if the container exists
     exists, err := CheckContainerExists(containerName)
     if err != nil {
         return fmt.Errorf("failed to check container existence: %w", err)
@@ -39,14 +38,13 @@ func InitRepocateDefaultContainer() error {
     if exists {
         color.Green("Default container '%s' exists. Checking status...", containerName)
 
-        // Ensure the container is running
         isRunning, err := IsContainerRunning(containerName)
         if err != nil {
             return fmt.Errorf("failed to check if container is running: %w", err)
         }
 
         if !isRunning {
-            color.Yellow("Container '%s' is not running. Starting it now...", containerName)
+            color.Yellow("Container '%s' is not running. Attempting to start it...", containerName)
             if err := StartContainer(containerName); err != nil {
                 return fmt.Errorf("failed to start container: %w", err)
             }
@@ -56,15 +54,13 @@ func InitRepocateDefaultContainer() error {
         return nil
     }
 
-    // If the container doesn't exist, pull the image
     color.Yellow("Default container '%s' not found. Pulling image '%s'...", containerName, imageName)
     if err := PullImage(imageName); err != nil {
         return fmt.Errorf("failed to pull image '%s': %w", imageName, err)
     }
 
-    // Create and start the container
     color.Yellow("Creating and starting container '%s'...", containerName)
-    if err := CreateAndStartContainer(containerName, imageName, []string{"/bin/zsh"}); err != nil {
+    if err := CreateAndStartContainer(containerName, imageName, []string{"/usr/local/bin/entrypoint.sh"}); err != nil {
         return fmt.Errorf("failed to create and start container '%s': %w", containerName, err)
     }
 
