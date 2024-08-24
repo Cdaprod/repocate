@@ -18,15 +18,26 @@ RUN apt-get update && \
 # Set the locale
 RUN locale-gen en_US.UTF-8
 
-# Install Oh My Zsh with a fallback in case of failure
-RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || echo "Oh My Zsh installation failed"
-
-# Set up directories for configurations
+# Set up directories for configurations and persistent history
 RUN mkdir -p /root/.config/zsh \
              /root/.config/nvim \
              /root/.config/vscode \
-             /root/.config/metagpt \
-             /root/.config/repocate
+             /root/.config/metagpt/config \
+             /root/.config/metagpt/prompts \
+             /root/.config/metagpt/roles \
+             /root/.config/metagpt/tools \
+             /root/.config/metagpt/workspace \
+             /root/.config/repocate \
+             /root/.persistent_history
+
+# Set up persistent history
+RUN touch /root/.persistent_history/.zsh_history && \
+    chmod 644 /root/.persistent_history/.zsh_history && \
+    echo 'export HISTFILE=/root/.persistent_history/.zsh_history' >> /root/.zshrc && \
+    echo 'export HISTSIZE=10000' >> /root/.zshrc && \
+    echo 'export SAVEHIST=10000' >> /root/.zshrc && \
+    echo 'setopt SHARE_HISTORY' >> /root/.zshrc && \
+    echo 'setopt HIST_IGNORE_ALL_DUPS' >> /root/.zshrc
 
 # Copy entrypoint script to the container
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

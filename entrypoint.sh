@@ -20,24 +20,12 @@ symlink_configs() {
 # Setup Zsh configuration
 if [ -d "$CONFIG_DIR/zsh" ]; then
   echo "Setting up Zsh configuration..."
-  ln -sf "$CONFIG_DIR/zsh/custom_plugins.zsh" "/root/.oh-my-zsh/custom/custom_plugins.zsh"
   ln -sf "$CONFIG_DIR/zsh/custom_plugins.zsh" "/custom_plugins.zsh"
 fi
 
-# Set up persistent history for Zsh
-if [ ! -d "/root/.persistent_history" ]; then
-  mkdir -p /root/.persistent_history
-fi
-
-touch /root/.persistent_history/.zsh_history
-chmod 644 /root/.persistent_history/.zsh_history
-
-if ! grep -q "HISTFILE=/root/.persistent_history/.zsh_history" /root/.zshrc; then
-  echo 'export HISTFILE=/root/.persistent_history/.zsh_history' >> /root/.zshrc
-  echo 'export HISTSIZE=10000' >> /root/.zshrc
-  echo 'export SAVEHIST=10000' >> /root/.zshrc
-  echo 'setopt SHARE_HISTORY' >> /root/.zshrc
-  echo 'setopt HIST_IGNORE_ALL_DUPS' >> /root/.zshrc
+# Ensure .zshrc exists
+if [ ! -f "/root/.zshrc" ]; then
+  touch /root/.zshrc
 fi
 
 # Setup Neovim configuration
@@ -55,6 +43,7 @@ fi
 # Setup MetaGPT configuration
 if [ -d "$CONFIG_DIR/metagpt" ]; then
   echo "Setting up MetaGPT configuration..."
+  mkdir -p "/root/.metagpt"
   symlink_configs "$CONFIG_DIR/metagpt/config" "/root/.metagpt/config"
   symlink_configs "$CONFIG_DIR/metagpt/prompts" "/root/.metagpt/prompts"
   symlink_configs "$CONFIG_DIR/metagpt/roles" "/root/.metagpt/roles"
@@ -65,6 +54,7 @@ fi
 # Setup Repocate configuration
 if [ -d "$CONFIG_DIR/repocate" ]; then
   echo "Setting up Repocate configuration..."
+  mkdir -p "/root/.repocate"
   ln -sf "$CONFIG_DIR/repocate/repocate.json" "/root/.repocate/repocate.json"
 fi
 
