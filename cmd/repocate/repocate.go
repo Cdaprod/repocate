@@ -3,7 +3,7 @@ package repocate
 import (
     "fmt"
     "os"
-    "time" // Import time for sleep operations
+    "time"
     "github.com/spf13/cobra"
     "github.com/fatih/color"
     "github.com/cheggaaa/pb/v3"
@@ -75,8 +75,8 @@ func handleDefaultContainer() {
 
     showProgress("Checking container status...", 100)
 
-    // Initialize the default container
-    err := InitRepocateDefaultContainer()
+    // Initialize the default container if not exists or ensure it is running
+    err := container.InitRepocateDefaultContainer()
     if err != nil {
         fmt.Println(color.RedString("Error initializing 'repocate-default' container: %s", err))
         os.Exit(1)
@@ -85,7 +85,7 @@ func handleDefaultContainer() {
     color.Green("Checking status of the 'repocate-default' container...")
 
     // Check if the container is running
-    isRunning, err := IsContainerRunning("repocate-default")
+    isRunning, err := container.IsContainerRunning("repocate-default")
     if err != nil {
         fmt.Println(color.RedString("Error checking container status: %s", err))
         os.Exit(1)
@@ -94,7 +94,7 @@ func handleDefaultContainer() {
     if !isRunning {
         color.Yellow("Container 'repocate-default' is not running. Starting it now...")
 
-        err := StartContainer("repocate-default")
+        err := container.StartContainer("repocate-default")
         if err != nil {
             fmt.Println(color.RedString("Error starting container: %s", err))
             os.Exit(1)
@@ -104,7 +104,7 @@ func handleDefaultContainer() {
     color.Green("Executing into the 'repocate-default' container now...")
     showProgress("Executing into container...", 100)
 
-    err = ExecIntoContainer("repocate-default")
+    err = container.ExecIntoContainer("repocate-default")
     if err != nil {
         fmt.Println(color.RedString("Error executing into default container: %s", err))
         os.Exit(1)
