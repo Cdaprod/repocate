@@ -3,7 +3,7 @@ package repocate
 import (
     "fmt"
     "os"
-    "time"
+    "time" // Import time for sleep operations
     "github.com/spf13/cobra"
     "github.com/fatih/color"
     "github.com/schollz/progressbar/v3"
@@ -116,7 +116,9 @@ func showProgress(description string, steps int) {
         progressbar.OptionSetWriter(os.Stderr),
         progressbar.OptionShowBytes(false),
         progressbar.OptionShowCount(),
-        progressbar.OptionClearOnFinish(), // Add to clear the bar upon completion
+        progressbar.OptionOnCompletion(func() {
+            fmt.Fprint(os.Stderr, "\n")
+        }),
     )
 
     for i := 0; i < steps; i++ {
