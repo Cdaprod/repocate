@@ -368,17 +368,29 @@ func ExecIntoContainer(containerName string) error {
         AttachStdout: true,
         AttachStderr: true,
         Tty:          true,
-        Cmd:          []string{"sh"}, // Replace with your preferred shell or command
+        Cmd:          []string{"/bin/zsh"}, // Make sure this shell exists in the container
     }
 
     execID, err := cli.ContainerExecCreate(ctx, containerName, execConfig)
     if err != nil {
-        return err
+        return fmt.Errorf("Failed to create exec configuration: %w", err)
     }
 
-    err = cli.ContainerExecStart(ctx, execID.ID, types.ExecStartCheck{Tty: true})
+    // Start the exec process
+    execStartCheck := types.ExecStartCheck{
+        Tty: true,
+    }
+
+    resp, err := cli.ContainerExecAttach(ctx, execID.ID, execStartCheck)
     if err != nil {
-        return err
+        return fmt.Errorf("Failed to attach to container exec process: %w", err)
+    }
+    defer resp.Close()
+
+    // Copy output to stdout and stderr
+    _, err = io.Copy(os.Stdout, resp.Reader)
+    if err != nil {
+        return fmt.Errorf("Error during exec process copy: %w", err)
     }
 
     log.Info(fmt.Sprintf("Executed into container %s.", containerName))
