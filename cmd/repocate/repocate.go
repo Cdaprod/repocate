@@ -119,6 +119,9 @@ func showProgress(description string, steps int) {
         progressbar.OptionOnCompletion(func() {
             fmt.Fprint(os.Stderr, "\n")
         }),
+        progressbar.OptionClearOnFinish(), // Clear line when progress is complete
+        progressbar.OptionSetWidth(30),    // Set width of progress bar
+        progressbar.OptionFullWidth(),     // Ensures it uses the full width of the terminal
     )
 
     for i := 0; i < steps; i++ {
