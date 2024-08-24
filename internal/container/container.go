@@ -28,7 +28,7 @@ func initializeDockerClient() (*client.Client, error) {
 // InitRepocateDefaultContainer initializes the 'repocate-default' container if it doesn't exist.
 func InitRepocateDefaultContainer() error {
     containerName := "repocate-default"
-    imageName := "cdaprod/repocate-dev:1.0.0-arm64"
+    imageName := "cdaprod/repocate-minimal:1.0.0-arm64"
 
     // Check if the container exists
     exists, err := CheckContainerExists(containerName)
