@@ -20,12 +20,8 @@ symlink_configs() {
 # Setup Zsh configuration
 if [ -d "$CONFIG_DIR/zsh" ]; then
   echo "Setting up Zsh configuration..."
+  ln -sf "$CONFIG_DIR/zsh/custom_plugins.zsh" "/root/.oh-my-zsh/custom/custom_plugins.zsh"
   ln -sf "$CONFIG_DIR/zsh/custom_plugins.zsh" "/custom_plugins.zsh"
-fi
-
-# Ensure .zshrc exists
-if [ ! -f "/root/.zshrc" ]; then
-  touch /root/.zshrc
 fi
 
 # Setup Neovim configuration
@@ -43,7 +39,6 @@ fi
 # Setup MetaGPT configuration
 if [ -d "$CONFIG_DIR/metagpt" ]; then
   echo "Setting up MetaGPT configuration..."
-  mkdir -p "/root/.metagpt"
   symlink_configs "$CONFIG_DIR/metagpt/config" "/root/.metagpt/config"
   symlink_configs "$CONFIG_DIR/metagpt/prompts" "/root/.metagpt/prompts"
   symlink_configs "$CONFIG_DIR/metagpt/roles" "/root/.metagpt/roles"
@@ -54,14 +49,10 @@ fi
 # Setup Repocate configuration
 if [ -d "$CONFIG_DIR/repocate" ]; then
   echo "Setting up Repocate configuration..."
-  mkdir -p "/root/.repocate"
   ln -sf "$CONFIG_DIR/repocate/repocate.json" "/root/.repocate/repocate.json"
 fi
 
 echo "Configuration setup complete."
 
-# Keep the container running with a persistent shell
-exec /bin/zsh -l
-
-# Alternative to keep running (if not using zsh):
-# exec tail -f /dev/null
+# Start a shell to keep the container running
+exec /bin/zsh

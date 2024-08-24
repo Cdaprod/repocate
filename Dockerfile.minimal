@@ -1,4 +1,4 @@
-# Start from a lightweight base image
+# Dockerfile
 FROM ubuntu:22.04
 
 # Set environment variables
@@ -39,15 +39,12 @@ RUN touch /root/.persistent_history/.zsh_history && \
     echo 'setopt SHARE_HISTORY' >> /root/.zshrc && \
     echo 'setopt HIST_IGNORE_ALL_DUPS' >> /root/.zshrc
 
-# Copy entrypoint script to the container
-COPY plugin-entrypoint.sh /usr/local/bin/plugin-entrypoint.sh
-RUN chmod +x /usr/local/bin/plugin-entrypoint.sh
+# Copy any necessary configuration files
+COPY .config/zsh/.zshrc /root/.zshrc
+COPY .config/zsh/custom_plugins.zsh /root/.oh-my-zsh/custom/custom_plugins.zsh
 
 # Define the working directory
 WORKDIR /workspace
-
-# Set the entrypoint to the custom entrypoint script
-ENTRYPOINT ["/usr/local/bin/plugin-entrypoint.sh"]
 
 # Default command to run when the container starts
 CMD ["zsh"]
