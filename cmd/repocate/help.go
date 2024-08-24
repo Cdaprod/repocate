@@ -3,7 +3,7 @@ package repocate
 
 import (
     "github.com/spf13/cobra"
-    "github.com/faith/color"
+    "github.com/fatih/color"
     "fmt"
 )
 
