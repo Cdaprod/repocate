@@ -168,7 +168,7 @@ func CheckImageExists(imageName string) (bool, error) {
 
 // PullImage pulls a Docker image, ensuring it is present locally.
 func PullImage(imageName string) error {
-    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    cli, err := initializeDockerClient()
     if err != nil {
         return fmt.Errorf("failed to create Docker client: %w", err)
     }
@@ -195,7 +195,9 @@ func PullImage(imageName string) error {
     defer out.Close()
 
     log.Info(fmt.Sprintf("Pulling image %s...", imageName))
-    io.Copy(os.Stdout, out)
+    if _, err := io.Copy(os.Stdout, out); err != nil {
+        return fmt.Errorf("failed to read image pull response: %w", err)
+    }
 
     return nil
 }
@@ -210,17 +212,26 @@ func CreateAndStartContainer(containerName, imageName string, cmd []string) erro
 
     ctx := context.Background()
 
+    // Ensure the image is pulled or exists locally
+    err = PullImage(imageName)
+    if err != nil {
+        log.Error(fmt.Sprintf("Error pulling image: %s", err))
+        return err
+    }
+
     // Create Docker container
     resp, err := cli.ContainerCreate(ctx, &container.Config{
         Image: imageName,
         Cmd:   cmd,
     }, nil, nil, nil, containerName)
     if err != nil {
+        log.Error(fmt.Sprintf("Failed to create container %s: %s", containerName, err))
         return err
     }
 
     // Start Docker container
     if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+        log.Error(fmt.Sprintf("Failed to start container %s: %s", containerName, err))
         return err
     }
 
