@@ -4,7 +4,9 @@ import (
     "fmt"
     "log"
     "os"
-    "path/filepath" 
+    "path/filepath"
+
+    "github.com/fatih/color"
 )
 
 var (
@@ -34,22 +36,35 @@ func getLogFilePath() string {
     return filepath.Join(logDir, "repocate.log")
 }
 
-// Info logs an informational message
+// EnsureLoggerInitialized ensures that the logger is initialized
+func ensureLoggerInitialized() {
+    if logger == nil {
+        SetupLogger()
+    }
+}
+
+// Info logs an informational message with a green color
 func Info(message string) {
+    ensureLoggerInitialized()
     if logLevel == "INFO" || logLevel == "DEBUG" {
-        logger.Printf("INFO: %s", message)
+        coloredMessage := color.New(color.FgGreen).SprintFunc()(fmt.Sprintf("INFO: %s", message))
+        logger.Println(coloredMessage)
     }
 }
 
-// Warn logs a warning message
+// Warn logs a warning message with a yellow color
 func Warn(message string) {
+    ensureLoggerInitialized()
     if logLevel != "ERROR" {
-        logger.Printf("WARN: %s", message)
+        coloredMessage := color.New(color.FgYellow).SprintFunc()(fmt.Sprintf("WARN: %s", message))
+        logger.Println(coloredMessage)
     }
 }
 
-// Error logs an error message and exits the program
+// Error logs an error message with a red color and exits the program
 func Error(message string) {
-    logger.Printf("ERROR: %s", message)
+    ensureLoggerInitialized()
+    coloredMessage := color.New(color.FgRed).SprintFunc()(fmt.Sprintf("ERROR: %s", message))
+    logger.Println(coloredMessage)
     os.Exit(1)
 }

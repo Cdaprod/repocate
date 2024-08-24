@@ -1,8 +1,10 @@
 [![Build and Cache Repocate](https://github.com/Cdaprod/repocate/actions/workflows/repocate-build.yml/badge.svg)](https://github.com/Cdaprod/repocate/actions/workflows/repocate-build.yml)
 
 <div align="center">
-  <img src="public/photo.webp" alt="Repocate Image">
+  <img src="public/photo.webp" alt="Repocate Image" style="max-width: 50%;">
 </div>
+
+---
 
 # Repocate: Your Code's Favorite Moving Company! 📦🚚
 
@@ -23,27 +25,59 @@ So, whether you're a digital nomad hopping between coffee shops or a team lead o
 Ready to make your code feel at home anywhere? Let's repocate! 🚀
 
 <div align="center">
-  <img src="public/repocate.jpeg" alt="Repocate Image">
+  <img src="public/repocate.jpeg" alt="Repocate Image" style="max-width: 50%;">
 </div>
+
+---
+
+## User Flow Diagram
+
+The diagram below outlines the typical flow of using `Repocate`, from installation to setting up a development container:
+
+```mermaid
+graph TD
+    A[User Installs Repocate] --> B[Run 'repocate create']
+    B --> C{Repository URL or Name Provided?}
+    C -- Yes --> D[Clone the Specified Repository]
+    C -- No --> E[Create Default Container 'repocate-default']
+    D --> F[Check for Dockerfile in Repo]
+    F -- Dockerfile Exists --> G[Build Container for Repo]
+    F -- No Dockerfile --> H[Error: No Dockerfile Found]
+    E --> I[Use 'Dockerfile.multiarch' for Default]
+    I --> J[Build Default Container]
+    G --> J
+    J --> K[Container Ready for Development]
+    K --> L[User Enters Container with 'repocate enter']
+    L --> M[Start Development Workflow in Container]
+
+    style H fill:#f96,stroke:#333,stroke-width:2px;
+    style C fill:#bbf,stroke:#333,stroke-width:2px;
+    style F fill:#bbf,stroke:#333,stroke-width:2px;
+    style B fill:#bbf,stroke:#333,stroke-width:2px;
+    style E fill:#bbf,stroke:#333,stroke-width:2px;
+    style J fill:#bbf,stroke:#333,stroke-width:2px;
+```
+
+### Quick Explanation:
+
+1. **Installation**: Install `Repocate` on your system.
+2. **Create**: Run `repocate create` with or without a repository URL.
+3. **Clone or Default**: If a repository is provided, it's cloned; otherwise, a default container is created.
+4. **Build**: A container is built using the repository's Dockerfile or a default multi-architecture Dockerfile.
+5. **Develop**: Enter the container with `repocate enter` and start your development workflow.
+
+---
 
 ## Features
 
-- **Containerized Development Environment**: Repocate provides a consistent, reproducible, and isolated development environment inside Docker containers. It includes all necessary dependencies and configurations, ensuring that developers can get started quickly without worrying about local environment setup.
-
-- **Dynamic Port and Volume Management**: Repocate intelligently manages dynamic port assignments and Docker volumes to avoid conflicts, making it easier to run multiple instances simultaneously.
-
-- **Version Control Integration**: The tool integrates seamlessly with Git, allowing automatic versioning and tagging of development containers. This ensures that every significant change is captured and can be easily reverted if necessary.
-
-- **Custom Plugin Support**: Extend the environment with custom Zsh plugins, ensuring that your development shell is tailored to your specific needs.
-
-- **Snapshot and Rollback**: Create Git snapshots before major changes, and easily roll back to previous states in case of issues, ensuring a robust development process.
-
-- **Flexible Configuration**: Repocate allows users to customize their development environment through `.zshrc` and Neovim configuration files, enabling a highly personalized development experience.
-- 
+- **Containerized Development**: Consistent, reproducible environments in Docker.
+- **Dynamic Management**: Handles ports and volumes intelligently.
+- **Version Control Integration**: Automatically version and tag containers.
+- **Custom Plugins**: Tailor your environment with Zsh and Neovim configurations.
+- **Snapshot & Rollback**: Safeguard your progress with Git snapshots and easy rollbacks.
+- **Flexible Configuration**: Customize your `.zshrc` and Neovim settings.
 
 ## Usage
-
-After setting up Repocate, you can start using it by cloning repositories into containers. Here's a quick guide:
 
 1. **Create a Development Container:**
 
@@ -51,15 +85,11 @@ After setting up Repocate, you can start using it by cloning repositories into c
    repocate create <repo-url>
    ```
 
-   This command will clone the specified repository into a containerized environment.
-
-2. **Enter the Development Container:**
+2. **Enter the Container:**
 
    ```sh
    repocate enter <repo-url> or <repo_name>
    ```
-
-   Once the container is created, you can enter it using this command.
 
 3. **Stop the Container:**
 
@@ -67,15 +97,11 @@ After setting up Repocate, you can start using it by cloning repositories into c
    repocate stop <repo-url>
    ```
 
-   Stops the running development container.
-
 4. **Rebuild the Container:**
 
    ```sh
    repocate rebuild <repo-url>
    ```
-
-   Rebuilds the container, applying any updates or changes.
 
 5. **List All Containers:**
 
@@ -83,13 +109,11 @@ After setting up Repocate, you can start using it by cloning repositories into c
    repocate list
    ```
 
-   Lists all Repocate-managed containers with their current status.
-
 6. **Advanced Usage:**
 
    - **Snapshot:** `repocate snapshot` to create a Git snapshot.
    - **Rollback:** `repocate rollback` to revert to the last known good commit.
-   - **Volume Management:** Dynamically create and manage Docker volumes with `repocate volume`.
+   - **Volume Management:** Use `repocate volume` for dynamic volume management.
 
 ## Getting Started
 
@@ -103,19 +127,17 @@ After setting up Repocate, you can start using it by cloning repositories into c
    make install
    ```
 
-   This will install the Repocate script and set up necessary configurations.
-
 2. **Configure Your Environment:**
 
-   Customize your `.zshrc` and Neovim settings to tailor the environment to your needs. Configuration files are located in `~/.config/repocate/`.
+   Customize your environment via configuration files located in `~/.config/repocate/`.
 
-3. **Build Your Docker Image:**
+3. **Build Docker Images:**
 
-   You can build and push Docker images using the provided GitHub Actions workflows, which handle dynamic port management, caching, and versioning.
+   Leverage the provided GitHub Actions workflows to manage image builds, port assignments, and versioning.
 
 ## Contributing
 
-We welcome contributions to improve Repocate! To contribute:
+We welcome contributions! Here's how you can help:
 
 1. Fork the repository.
 2. Create a feature branch (`git checkout -b feature/your-feature`).
@@ -129,5 +151,4 @@ Repocate is licensed under the MIT License. See the `LICENSE` file for more info
 
 ## Support
 
-If you encounter any issues or have questions, feel free to open an issue on GitHub or reach out to the maintainer at cdaprod@contact.com.
-
+Encounter issues or have questions? Open an issue on GitHub or reach out to the maintainer at cdaprod@cdaprod.dev

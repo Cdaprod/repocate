@@ -2,7 +2,8 @@ package repocate
 
 import (
     "github.com/spf13/cobra"
-    //cont "github.com/cdaprod/repocate/cmd/repocate" // Import with alias
+    "fmt"
+    "github.com/fatih/color"
 )
 
 // rootCmd is the root command for the CLI
@@ -14,6 +15,18 @@ var rootCmd = &cobra.Command{
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() error {
+    // Display ASCII art banner with color
+    color.Green(`  ______                           _       
+ | ___ \                         | |      
+ | |_/ /___ _ __   ___   ___ __ _| |_ ___ 
+ |    // _ \ '_ \ / _ \ / __/ _` + "`" + ` | __/ _ \
+ | |\ \  __/ |_) | (_) | (_| (_| | ||  __/
+ \_| \_\___| .__/ \___/ \___\__,_|\__\___|
+           | |                            
+           |_|`)
+
+    fmt.Println(color.HiYellowString("By: David Cannan (Cdaprod)"))
+
     return rootCmd.Execute()
 }
 
