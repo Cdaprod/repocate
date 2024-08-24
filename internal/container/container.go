@@ -142,7 +142,7 @@ func RebuildContainer(workspaceDir, repoName string) error {
 
 // CheckContainerExists checks if a Docker container with a specific name exists.
 func CheckContainerExists(containerName string) (bool, error) {
-    cli, err := initializeDockerClient()
+    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
         return false, err
     }
@@ -160,10 +160,42 @@ func CheckContainerExists(containerName string) (bool, error) {
             }
         }
     }
+
     return false, nil
 }
 
-// CreateAndStartContainer creates and starts a Docker container with a specific name.
+// PullImageIfNotExists pulls a Docker image if it is not already present locally.
+func PullImageIfNotExists(imageName string) error {
+    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    if err != nil {
+        return err
+    }
+    defer cli.Close()
+
+    images, err := cli.ImageList(context.Background(), types.ImageListOptions{})
+    if err != nil {
+        return err
+    }
+
+    for _, image := range images {
+        for _, tag := range image.RepoTags {
+            if tag == imageName {
+                return nil // Image already exists
+            }
+        }
+    }
+
+    // Image does not exist, pull it
+    out, err := cli.ImagePull(context.Background(), imageName, types.ImagePullOptions{})
+    if err != nil {
+        return err
+    }
+    defer out.Close()
+
+    io.Copy(os.Stdout, out)
+    return nil
+}
+
 // CreateAndStartContainer creates and starts a Docker container with a specific name.
 func CreateAndStartContainer(containerName, imageName string, cmd []string) error {
     cli, err := initializeDockerClient()

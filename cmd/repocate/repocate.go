@@ -87,11 +87,14 @@ func handleDefaultContainer() {
         color.Yellow("Default container 'repocate-default' not found. Creating it now...")
         showProgress("Creating container...", 100)
 
-        // Specify image name and command for container creation
-        imageName := "cdaprod/repocate-dev:v1.0.0-arm64" // Example image name
-        cmd := []string{"/bin/zsh"} // Default command to run in the container
+        // Pull the image if not available locally
+        err := container.PullImageIfNotExists("cdaprod/repocate-dev:v1.0.0-arm64")
+        if err != nil {
+            fmt.Println(color.RedString("Error pulling image: %s", err))
+            os.Exit(1)
+        }
 
-        err := container.CreateAndStartContainer("repocate-default", imageName, cmd)
+        err = container.CreateAndStartContainer("repocate-default", "cdaprod/repocate-dev:v1.0.0-arm64", []string{"/bin/zsh"})
         if err != nil {
             fmt.Println(color.RedString("Error creating default container: %s", err))
             os.Exit(1)
