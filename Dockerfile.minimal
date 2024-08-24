@@ -1,0 +1,43 @@
+# Start from a lightweight base image
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
+
+# Install basic tools and dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        git \
+        zsh \
+        curl \
+        locales && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set the locale
+RUN locale-gen en_US.UTF-8
+
+# Set up persistent history
+RUN mkdir -p /root/.persistent_history \
+    && touch /root/.persistent_history/.zsh_history \
+    && chmod 644 /root/.persistent_history/.zsh_history \
+    && echo 'export HISTFILE=/root/.persistent_history/.zsh_history' >> /root/.zshrc \
+    && echo 'export HISTSIZE=10000' >> /root/.zshrc \
+    && echo 'export SAVEHIST=10000' >> /root/.zshrc \
+    && echo 'setopt SHARE_HISTORY' >> /root/.zshrc \
+    && echo 'setopt HIST_IGNORE_ALL_DUPS' >> /root/.zshrc
+
+# Set up Zsh and Oh My Zsh
+RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || echo "Oh My Zsh installation failed"
+
+# Copy entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Define working directory
+WORKDIR /workspace
+
+# Set the entrypoint
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["zsh"]

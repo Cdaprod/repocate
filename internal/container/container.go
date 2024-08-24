@@ -9,6 +9,7 @@ import (
     "github.com/cdaprod/repocate/internal/log"
     "context"
     "github.com/docker/docker/api/types"
+    "github.com/docker/docker/api/types/container"
     "github.com/docker/docker/client"
 )
 
@@ -107,27 +108,42 @@ func CheckContainerExists(containerName string) (bool, error) {
 }
 
 // CreateAndStartContainer creates and starts a Docker container with a specific name.
-func CreateAndStartContainer(containerName string) error {
+func CreateAndStartContainer(containerName, imageName string, cmd []string) error {
+    // Initialize Docker client
     cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
+        log.Error(fmt.Sprintf("Failed to create Docker client: %s", err))
         return err
     }
+    defer cli.Close() // Ensure client is closed after use
 
     ctx := context.Background()
 
+    // Set default image and command if none provided
+    if imageName == "" {
+        imageName = "your-default-image" // Replace with your actual default image
+    }
+    if len(cmd) == 0 {
+        cmd = []string{"your-default-command"} // Replace with your actual default command
+    }
+
+    // Create Docker container
     resp, err := cli.ContainerCreate(ctx, &container.Config{
-        Image: "your-default-image", // Replace with your actual default image
-        Cmd:   []string{"your-default-command"}, // Replace with your actual default command
+        Image: imageName,
+        Cmd:   cmd,
     }, nil, nil, nil, containerName)
     if err != nil {
+        log.Error(fmt.Sprintf("Failed to create container %s: %s", containerName, err))
         return err
     }
 
+    // Start Docker container
     if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+        log.Error(fmt.Sprintf("Failed to start container %s: %s", containerName, err))
         return err
     }
 
-    log.Info(fmt.Sprintf("Container %s created and started.", containerName))
+    log.Info(fmt.Sprintf("Container %s created and started successfully with image %s.", containerName, imageName))
     return nil
 }
 
