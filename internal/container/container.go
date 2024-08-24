@@ -165,35 +165,30 @@ func CheckContainerExists(containerName string) (bool, error) {
 }
 
 // PullImageIfNotExists pulls a Docker image if it is not already present locally.
-func PullImageIfNotExists(imageName string) error {
+func PullImageIfNotExists(imageName string) (bool, error) {
     cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
-        return err
+        return false, err
     }
     defer cli.Close()
 
-    images, err := cli.ImageList(context.Background(), types.ImageListOptions{})
-    if err != nil {
-        return err
+    ctx := context.Background()
+
+    _, _, err = cli.ImageInspectWithRaw(ctx, imageName)
+    if err == nil {
+        // Image already exists locally
+        return true, nil
     }
 
-    for _, image := range images {
-        for _, tag := range image.RepoTags {
-            if tag == imageName {
-                return nil // Image already exists
-            }
-        }
-    }
-
-    // Image does not exist, pull it
-    out, err := cli.ImagePull(context.Background(), imageName, types.ImagePullOptions{})
+    // If image does not exist, pull it
+    out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
     if err != nil {
-        return err
+        return false, err
     }
     defer out.Close()
 
     io.Copy(os.Stdout, out)
-    return nil
+    return true, nil
 }
 
 // CreateAndStartContainer creates and starts a Docker container with a specific name.

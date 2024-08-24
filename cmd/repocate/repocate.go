@@ -87,19 +87,28 @@ func handleDefaultContainer() {
         color.Yellow("Default container 'repocate-default' not found. Creating it now...")
         showProgress("Creating container...", 100)
 
-        // Pull the image if not available locally
-        err := container.PullImageIfNotExists("cdaprod/repocate-dev:v1.0.0-arm64")
+        // Specify image name and command for container creation
+        imageName := "cdaprod/repocate-dev:v1.0.0-arm64"
+        cmd := []string{"/bin/zsh"}
+
+        // Check if the image exists locally or pull it if it doesn't
+        imageExists, err := container.PullImageIfNotExists(imageName)
         if err != nil {
             fmt.Println(color.RedString("Error pulling image: %s", err))
             os.Exit(1)
         }
 
-        err = container.CreateAndStartContainer("repocate-default", "cdaprod/repocate-dev:v1.0.0-arm64", []string{"/bin/zsh"})
-        if err != nil {
-            fmt.Println(color.RedString("Error creating default container: %s", err))
+        if imageExists {
+            err := container.CreateAndStartContainer("repocate-default", imageName, cmd)
+            if err != nil {
+                fmt.Println(color.RedString("Error creating default container: %s", err))
+                os.Exit(1)
+            }
+            fmt.Println(color.GreenString("Default container 'repocate-default' created and started."))
+        } else {
+            fmt.Println(color.RedString("Failed to find or pull the required Docker image."))
             os.Exit(1)
         }
-        fmt.Println(color.GreenString("Default container 'repocate-default' created and started."))
     } else {
         color.Green("Default container 'repocate-default' exists. Executing into it now...")
         showProgress("Executing into container...", 100)
