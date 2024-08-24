@@ -60,8 +60,8 @@ fi
 
 echo "Configuration setup complete."
 
-# Keep the container running
-exec "$@"
+# Keep the container running with a persistent shell
+exec /bin/zsh -l
 
-# Alternatively, you can uncomment the line below to keep the shell running
-# exec /bin/sh -c "while :; do sleep 1; done"
+# Alternative to keep running (if not using zsh):
+# exec tail -f /dev/null
