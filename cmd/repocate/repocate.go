@@ -6,7 +6,7 @@ import (
     "time" // Import time for sleep operations
     "github.com/spf13/cobra"
     "github.com/fatih/color"
-    "github.com/schollz/progressbar/v3"
+    "github.com/cheggaaa/pb/v3"
     "github.com/cdaprod/repocate/internal/container"
 )
 
@@ -111,21 +111,13 @@ func handleDefaultContainer() {
 
 // New function to show progress for any operation
 func showProgress(description string, steps int) {
-    bar := progressbar.NewOptions(steps,
-        progressbar.OptionSetDescription(fmt.Sprintf("[green]%s...[reset]", description)),
-        progressbar.OptionSetWriter(os.Stderr),
-        progressbar.OptionShowBytes(false),
-        progressbar.OptionShowCount(),
-        progressbar.OptionOnCompletion(func() {
-            fmt.Fprint(os.Stderr, "\n")
-        }),
-        progressbar.OptionClearOnFinish(), // Clear line when progress is complete
-        progressbar.OptionSetWidth(30),    // Set width of progress bar
-        progressbar.OptionFullWidth(),     // Ensures it uses the full width of the terminal
-    )
+    bar := pb.StartNew(steps)
+    bar.Set("prefix", description)
 
     for i := 0; i < steps; i++ {
-        bar.Add(1)
+        bar.Increment()
         time.Sleep(10 * time.Millisecond) // Adjust this delay to simulate progress
     }
+
+    bar.Finish()
 }
