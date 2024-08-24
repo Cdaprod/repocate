@@ -116,9 +116,7 @@ func showProgress(description string, steps int) {
         progressbar.OptionSetWriter(os.Stderr),
         progressbar.OptionShowBytes(false),
         progressbar.OptionShowCount(),
-        progressbar.OptionOnCompletion(func() {
-            fmt.Fprint(os.Stderr, "\n")
-        }),
+        progressbar.OptionClearOnFinish(), // Add to clear the bar upon completion
     )
 
     for i := 0; i < steps; i++ {

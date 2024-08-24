@@ -163,6 +163,7 @@ func CheckContainerExists(containerName string) (bool, error) {
 }
 
 // CreateAndStartContainer creates and starts a Docker container with a specific name.
+// CreateAndStartContainer creates and starts a Docker container with a specific name.
 func CreateAndStartContainer(containerName, imageName string, cmd []string) error {
     cli, err := initializeDockerClient()
     if err != nil {
@@ -172,10 +173,20 @@ func CreateAndStartContainer(containerName, imageName string, cmd []string) erro
 
     ctx := context.Background()
 
+    // Pull the image before creating the container
+    out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+    if err != nil {
+        log.Error(fmt.Sprintf("Error pulling image %s: %s", imageName, err))
+        return err
+    }
+    defer out.Close()
+    io.Copy(os.Stdout, out) // Output the progress of the image pulling to stdout
+
     // Create Docker container
     resp, err := cli.ContainerCreate(ctx, &container.Config{
         Image: imageName,
         Cmd:   cmd,
+        Tty:   true, // To enable TTY support in the container
     }, nil, nil, nil, containerName)
     if err != nil {
         return err
