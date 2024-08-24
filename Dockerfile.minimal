@@ -40,14 +40,14 @@ RUN touch /root/.persistent_history/.zsh_history && \
     echo 'setopt HIST_IGNORE_ALL_DUPS' >> /root/.zshrc
 
 # Copy entrypoint script to the container
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY plugin-entrypoint.sh /usr/local/bin/plugin-entrypoint.sh
+RUN chmod +x /usr/local/bin/plugin-entrypoint.sh
 
 # Define the working directory
 WORKDIR /workspace
 
 # Set the entrypoint to the custom entrypoint script
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/plugin-entrypoint.sh"]
 
 # Default command to run when the container starts
 CMD ["zsh"]

@@ -60,5 +60,8 @@ fi
 
 echo "Configuration setup complete."
 
-# Execute the command passed to the entrypoint
+# Keep the container running
 exec "$@"
+
+# Alternatively, you can uncomment the line below to keep the shell running
+# exec /bin/sh -c "while :; do sleep 1; done"
