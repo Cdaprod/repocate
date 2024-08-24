@@ -13,12 +13,23 @@ import (
     "github.com/docker/docker/client"
 )
 
+// initializeDockerClient initializes the Docker client and handles any errors.
+func initializeDockerClient() (*client.Client, error) {
+    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    if err != nil {
+        log.Error(fmt.Sprintf("Failed to create Docker client: %s", err))
+        return nil, err
+    }
+    return cli, nil
+}
+
 // ListContainers lists all Docker containers for this project.
 func ListContainers() ([]types.Container, error) {
-    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    cli, err := initializeDockerClient()
     if err != nil {
         return nil, err
     }
+    defer cli.Close()
 
     containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
     if err != nil {
@@ -29,20 +40,20 @@ func ListContainers() ([]types.Container, error) {
     return containers, nil
 }
 
-// ResolveRepoName resolves the repository name from the provided URL or path
+// ResolveRepoName resolves the repository name from the provided URL or path.
 func ResolveRepoName(repoInput string) (string, error) {
     repoName := filepath.Base(repoInput)
     return repoName, nil
 }
 
-// IsRepoCloned checks if the repository is already cloned in the workspace
+// IsRepoCloned checks if the repository is already cloned in the workspace.
 func IsRepoCloned(workspaceDir, repoName string) bool {
     repoPath := filepath.Join(workspaceDir, repoName)
     _, err := os.Stat(repoPath)
     return !os.IsNotExist(err)
 }
 
-// CloneRepository clones the repository to the workspace directory
+// CloneRepository clones the repository to the workspace directory.
 func CloneRepository(workspaceDir, repoInput string) error {
     repoName, err := ResolveRepoName(repoInput)
     if err != nil {
@@ -60,36 +71,75 @@ func CloneRepository(workspaceDir, repoInput string) error {
     return nil
 }
 
-// InitContainer initializes the container for the repository
+// InitContainer initializes the container for the repository.
 func InitContainer(workspaceDir, repoName string) error {
-    log.Info(fmt.Sprintf("Initialized container for %s", repoName))
-    return nil
+    exists, err := CheckContainerExists(repoName)
+    if err != nil {
+        return err
+    }
+
+    if exists {
+        log.Info(fmt.Sprintf("Container for %s already exists. Entering container.", repoName))
+        return ExecIntoContainer(repoName)
+    }
+
+    log.Info(fmt.Sprintf("Initializing container for %s", repoName))
+    err = CreateAndStartContainer(repoName, "cdaprod/repocate-dev:v1.0.0-arm64", []string{"/bin/zsh"})
+    if err != nil {
+        return err
+    }
+
+    return ExecIntoContainer(repoName)
 }
 
-// EnterContainer enters the development container for the repository
+// EnterContainer enters the development container for the repository.
 func EnterContainer(workspaceDir, repoName string) error {
-    log.Info(fmt.Sprintf("Entered container for %s", repoName))
-    return nil
+    log.Info(fmt.Sprintf("Entering container for %s", repoName))
+    return ExecIntoContainer(repoName)
 }
 
-// StopContainer stops the development container for the repository
+// StopContainer stops the development container for the repository.
 func StopContainer(workspaceDir, repoName string) error {
+    cli, err := initializeDockerClient()
+    if err != nil {
+        return err
+    }
+    defer cli.Close()
+
+    ctx := context.Background()
+    if err := cli.ContainerStop(ctx, repoName, nil); err != nil {
+        log.Error(fmt.Sprintf("Failed to stop container %s: %s", repoName, err))
+        return err
+    }
+
     log.Info(fmt.Sprintf("Stopped container for %s", repoName))
     return nil
 }
 
-// RebuildContainer rebuilds the development container for the repository
+// RebuildContainer rebuilds the development container for the repository.
 func RebuildContainer(workspaceDir, repoName string) error {
+    log.Info(fmt.Sprintf("Rebuilding container for %s", repoName))
+    err := StopContainer(workspaceDir, repoName)
+    if err != nil {
+        return err
+    }
+
+    err = InitContainer(workspaceDir, repoName)
+    if err != nil {
+        return err
+    }
+
     log.Info(fmt.Sprintf("Rebuilt container for %s", repoName))
     return nil
 }
 
 // CheckContainerExists checks if a Docker container with a specific name exists.
 func CheckContainerExists(containerName string) (bool, error) {
-    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    cli, err := initializeDockerClient()
     if err != nil {
         return false, err
     }
+    defer cli.Close()
 
     containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
     if err != nil {
@@ -103,29 +153,18 @@ func CheckContainerExists(containerName string) (bool, error) {
             }
         }
     }
-
     return false, nil
 }
 
 // CreateAndStartContainer creates and starts a Docker container with a specific name.
 func CreateAndStartContainer(containerName, imageName string, cmd []string) error {
-    // Initialize Docker client
-    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    cli, err := initializeDockerClient()
     if err != nil {
-        log.Error(fmt.Sprintf("Failed to create Docker client: %s", err))
         return err
     }
-    defer cli.Close() // Ensure client is closed after use
+    defer cli.Close()
 
     ctx := context.Background()
-
-    // Set default image and command if none provided
-    if imageName == "" {
-        imageName = "your-default-image" // Replace with your actual default image
-    }
-    if len(cmd) == 0 {
-        cmd = []string{"your-default-command"} // Replace with your actual default command
-    }
 
     // Create Docker container
     resp, err := cli.ContainerCreate(ctx, &container.Config{
@@ -133,13 +172,11 @@ func CreateAndStartContainer(containerName, imageName string, cmd []string) erro
         Cmd:   cmd,
     }, nil, nil, nil, containerName)
     if err != nil {
-        log.Error(fmt.Sprintf("Failed to create container %s: %s", containerName, err))
         return err
     }
 
     // Start Docker container
     if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-        log.Error(fmt.Sprintf("Failed to start container %s: %s", containerName, err))
         return err
     }
 
@@ -149,10 +186,11 @@ func CreateAndStartContainer(containerName, imageName string, cmd []string) erro
 
 // ExecIntoContainer executes into a running Docker container.
 func ExecIntoContainer(containerName string) error {
-    cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    cli, err := initializeDockerClient()
     if err != nil {
         return err
     }
+    defer cli.Close()
 
     ctx := context.Background()
 
