@@ -16,7 +16,16 @@ var rootCmd = &cobra.Command{
     Short: "Repocate is a tool for managing development environments using Docker containers.",
     Long:  `Repocate allows you to clone repositories, create isolated development environments, and manage them using Docker containers.`,
     Run: func(cmd *cobra.Command, args []string) {
-        // Check and run default container logic
+        // Display help information when no subcommand is provided
+        cmd.Help()
+    },
+}
+
+// startCmd is the command to initialize and start the default container
+var startCmd = &cobra.Command{
+    Use:   "start",
+    Short: "Initialize and start the default Repocate container",
+    Run: func(cmd *cobra.Command, args []string) {
         handleDefaultContainer()
     },
 }
@@ -41,15 +50,15 @@ func Execute() error {
     fmt.Println("  repocate [command]")
 
     color.Blue("\n\nAvailable Commands:")
-    fmt.Println(fmt.Sprintf("  %-12s %s", "clone", "Clone a repository."))
-    fmt.Println(fmt.Sprintf("  %-12s %s", "completion", "generate the autocompletion script for the specified shell"))
-    fmt.Println(fmt.Sprintf("  %-12s %s", "create", "Clone a repo and create/start a development container."))
-    fmt.Println(fmt.Sprintf("  %-12s %s", "enter", "Enter the development container for a specific repo."))
-    fmt.Println(fmt.Sprintf("  %-12s %s", "help", "Show help information."))
-    fmt.Println(fmt.Sprintf("  %-12s %s", "list", "List all repocate containers."))
-    fmt.Println(fmt.Sprintf("  %-12s %s", "rebuild", "Rebuild the development container for a specific repo."))
-    fmt.Println(fmt.Sprintf("  %-12s %s", "stop", "Stop the development container for a specific repo."))
-    fmt.Println(fmt.Sprintf("  %-12s %s", "version", "Show version information."))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "start", "Initialize and start the default Repocate container"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "clone", "Clone a repository"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "create", "Clone a repo and create/start a development container"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "enter", "Enter the development container for a specific repo"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "help", "Show help information"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "list", "List all repocate containers"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "rebuild", "Rebuild the development container for a specific repo"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "stop", "Stop the development container for a specific repo"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "version", "Show version information"))
 
     color.Blue("\n\nFlags:")
     fmt.Println("  -h, --help   help for repocate")
@@ -60,6 +69,7 @@ func Execute() error {
 }
 
 func init() {
+    rootCmd.AddCommand(startCmd)
     rootCmd.AddCommand(CreateCmd)
     rootCmd.AddCommand(EnterCmd)
     rootCmd.AddCommand(StopCmd)
@@ -71,7 +81,7 @@ func init() {
 }
 
 func handleDefaultContainer() {
-    color.Cyan("Checking for 'repocate-default' container...")
+    color.Cyan("Initializing and starting the 'repocate-default' container...")
 
     showProgress("Checking container status...", 100)
 
@@ -101,17 +111,10 @@ func handleDefaultContainer() {
         }
     }
 
-    color.Green("Executing into the 'repocate-default' container now...")
-    showProgress("Executing into container...", 100)
-
-    err = container.ExecIntoContainer("repocate-default")
-    if err != nil {
-        fmt.Println(color.RedString("Error executing into default container: %s", err))
-        os.Exit(1)
-    }
+    color.Green("'repocate-default' container is ready.")
 }
 
-// New function to show progress for any operation
+// showProgress function to display a progress bar
 func showProgress(description string, steps int) {
     bar := pb.StartNew(steps)
     bar.Set("prefix", description)
