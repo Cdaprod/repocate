@@ -13,6 +13,41 @@ import (
 	"github.com/fatih/color"
 )
 
+// handleDefaultContainer handles the default container initialization and startup
+func handleDefaultContainer() {
+    color.Cyan("Initializing and starting the 'repocate-default' container...")
+
+    showProgress("Checking container status...", 100)
+
+    // Initialize the default container if not exists or ensure it is running
+    err := container.InitRepocateDefaultContainer()
+    if err != nil {
+        fmt.Println(color.RedString("Error initializing 'repocate-default' container: %s", err))
+        os.Exit(1)
+    }
+
+    color.Green("Checking status of the 'repocate-default' container...")
+
+    // Check if the container is running
+    isRunning, err := container.IsContainerRunning("repocate-default")
+    if err != nil {
+        fmt.Println(color.RedString("Error checking container status: %s", err))
+        os.Exit(1)
+    }
+
+    if !isRunning {
+        color.Yellow("Container 'repocate-default' is not running. Starting it now...")
+
+        err := container.StartContainer("repocate-default")
+        if err != nil {
+            fmt.Println(color.RedString("Error starting container: %s", err))
+            os.Exit(1)
+        }
+    }
+
+    color.Green("'repocate-default' container is ready.")
+}
+
 // InitRepocateDefaultContainer initializes the 'repocate-default' container if it doesn't exist.
 func InitRepocateDefaultContainer() error {
 	containerName := GetDefaultContainerName()
