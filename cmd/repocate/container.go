@@ -15,35 +15,15 @@ import (
 var CreateCmd = &cobra.Command{
     Use:   "create [repository URL or name]",
     Short: "Clone a repo and create/start a development container.",
-    Args:  cobra.MaximumNArgs(1), // Allow zero or one argument
+    Args:  cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
-        // Set default repository input
-        repoInput := "repocate-default"
-        
-        if len(args) == 1 {
-            repoInput = args[0] // Use the provided argument if any
-        }
-        
-        // Debugging to check config loading
-        fmt.Println("Loading configuration...")
-        config.LoadConfig()  // This should load the config file
-        fmt.Println("Configuration loaded.")
-
-        // Ensure the logger is properly set up
+        repoInput := args[0]
+        config.LoadConfig()
         log.SetupLogger()
-        fmt.Println("Logger set up.")
-
-        // Ensure WorkspaceDir is set
-        if config.WorkspaceDir == "" {
-            fmt.Println("Workspace directory is not set in configuration.")
-            log.Error("Workspace directory is not set.")
-            os.Exit(1)
-        }
 
         // Resolve repository name and paths
         repoName, err := utils.ExtractRepoName(repoInput)
         if err != nil {
-            fmt.Println("Failed to extract repo name.")
             log.Error(fmt.Sprintf("Failed to extract repo name: %s", err))
             return
         }
@@ -52,10 +32,8 @@ var CreateCmd = &cobra.Command{
 
         // Clone the repository if not already cloned
         if !utils.IsRepoCloned(config.WorkspaceDir, repoName) {
-            fmt.Println("Cloning repository...")
             err = git.CloneRepository(config.WorkspaceDir, repoInput)
             if err != nil {
-                fmt.Println("Failed to clone repository.")
                 log.Error(fmt.Sprintf("Failed to clone repository: %s", err))
                 return
             }
