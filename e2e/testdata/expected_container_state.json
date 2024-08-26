@@ -1,0 +1,28 @@
+{
+  "Id": "e90e34656806",
+  "Name": "repocate-test-repo",
+  "State": {
+    "Status": "running",
+    "Running": true,
+    "Paused": false,
+    "Restarting": false,
+    "OOMKilled": false,
+    "Dead": false,
+    "Pid": 1234,
+    "ExitCode": 0,
+    "Error": "",
+    "StartedAt": "2023-08-25T12:00:00Z",
+    "FinishedAt": "0001-01-01T00:00:00Z"
+  },
+  "Image": "cdaprod/repocate-dev:1.0.0-arm64",
+  "Mounts": [
+    {
+      "Type": "bind",
+      "Source": "/tmp/repocate_e2e_test/test-repo",
+      "Destination": "/workspace",
+      "Mode": "rw",
+      "RW": true,
+      "Propagation": "rprivate"
+    }
+  ]
+}

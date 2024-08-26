@@ -1,0 +1,5 @@
+workspace_dir: "/tmp/repocate_e2e_test"
+default_image: "cdaprod/repocate-dev:1.0.0-arm64"
+log_level: "debug"
+docker_host: "unix:///var/run/docker.sock"
+test_repo_url: "https://github.com/example/test-repo.git"

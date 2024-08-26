@@ -56,6 +56,7 @@ func init() {
 
 // rootCmd is the root command for the CLI
 var rootCmd = &cobra.Command{
+<<<<<<< HEAD
 	Use:   "repocate",
 	Short: "Repocate is a tool for managing development environments using Docker containers.",
 	Long:  `Repocate allows you to clone repositories, create isolated development environments, and manage them using Docker containers.`,
@@ -63,15 +64,32 @@ var rootCmd = &cobra.Command{
 		// Display help information when no subcommand is provided
 		cmd.Help()
 	},
+=======
+    Use:   "repocate",
+    Short: "Repocate is a tool for managing development environments using Docker containers.",
+    Long:  `Repocate allows you to clone repositories, create isolated development environments, and manage them using Docker containers.`,
+    Run: func(cmd *cobra.Command, args []string) {
+        // Display help information when no subcommand is provided
+        cmd.Help()
+    },
+>>>>>>> 40fe53a95d672a39213ba620d4815158e748fc0a
 }
 
 // startCmd is the command to initialize and start the default container
 var startCmd = &cobra.Command{
+<<<<<<< HEAD
 	Use:   "start",
 	Short: "Initialize and start the default Repocate container",
 	Run: func(cmd *cobra.Command, args []string) {
 		handleDefaultContainer()
 	},
+=======
+    Use:   "start",
+    Short: "Initialize and start the default Repocate container",
+    Run: func(cmd *cobra.Command, args []string) {
+        handleDefaultContainer()
+    },
+>>>>>>> 40fe53a95d672a39213ba620d4815158e748fc0a
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -93,6 +111,7 @@ func Execute() error {
 	color.Blue("\n\nUsage:")
 	fmt.Println("  repocate [command]")
 
+<<<<<<< HEAD
 	color.Blue("\n\nAvailable Commands:")
 	fmt.Println(fmt.Sprintf("  %-12s %s", "start", "Initialize and start the default Repocate container"))
 	fmt.Println(fmt.Sprintf("  %-12s %s", "clone", "Clone a repository"))
@@ -103,17 +122,49 @@ func Execute() error {
 	fmt.Println(fmt.Sprintf("  %-12s %s", "rebuild", "Rebuild the development container for a specific repo"))
 	fmt.Println(fmt.Sprintf("  %-12s %s", "stop", "Stop the development container for a specific repo"))
 	fmt.Println(fmt.Sprintf("  %-12s %s", "version", "Show version information"))
+=======
+    color.Blue("\n\nAvailable Commands:")
+    fmt.Println(fmt.Sprintf("  %-12s %s", "start", "Initialize and start the default Repocate container"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "clone", "Clone a repository"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "create", "Clone a repo and create/start a development container"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "enter", "Enter the development container for a specific repo"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "help", "Show help information"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "list", "List all repocate containers"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "rebuild", "Rebuild the development container for a specific repo"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "stop", "Stop the development container for a specific repo"))
+    fmt.Println(fmt.Sprintf("  %-12s %s", "version", "Show version information"))
+>>>>>>> 40fe53a95d672a39213ba620d4815158e748fc0a
 
 	color.Blue("\n\nFlags:")
 	fmt.Println("  -h, --help   help for repocate")
 
 	fmt.Println(color.GreenString("\nUse \"repocate [command] --help\" for more information about a command."))
 
+<<<<<<< HEAD
 	return rootCmd.Execute()
 }
 
 func handleDefaultContainer() {
 	color.Cyan("Initializing and starting the 'repocate-default' container...")
+=======
+    return rootCmd.Execute()
+}
+
+func init() {
+    rootCmd.AddCommand(startCmd)
+    rootCmd.AddCommand(CreateCmd)
+    rootCmd.AddCommand(EnterCmd)
+    rootCmd.AddCommand(StopCmd)
+    rootCmd.AddCommand(RebuildCmd)
+    rootCmd.AddCommand(CloneCmd)
+    rootCmd.AddCommand(ListCmd)
+    rootCmd.AddCommand(VersionCmd)
+    rootCmd.AddCommand(HelpCmd)
+}
+
+func handleDefaultContainer() {
+    color.Cyan("Initializing and starting the 'repocate-default' container...")
+>>>>>>> 40fe53a95d672a39213ba620d4815158e748fc0a
 
 	showProgress("Checking container status...", 100)
 
