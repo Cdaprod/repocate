@@ -46,6 +46,14 @@ func handleDefaultContainer() {
     }
 
     color.Green("'repocate-default' container is ready.")
+// initializeDockerClient initializes the Docker client and handles any errors.
+func initializeDockerClient() (*client.Client, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Error(fmt.Sprintf("Failed to create Docker client: %s", err))
+		return nil, err
+	}
+	return cli, nil
 }
 
 // InitRepocateDefaultContainer initializes the 'repocate-default' container if it doesn't exist.
@@ -53,7 +61,6 @@ func InitRepocateDefaultContainer() error {
 	containerName := GetDefaultContainerName()
 	imageName := GetDefaultImageName()
 
-	// Check if the container exists
 	exists, err := CheckContainerExists(containerName)
 	if err != nil {
 		return fmt.Errorf("failed to check container existence: %w", err)
@@ -62,7 +69,6 @@ func InitRepocateDefaultContainer() error {
 	if exists {
 		color.Green("Default container '%s' exists. Checking status...", containerName)
 
-		// Ensure the container is running
 		isRunning, err := IsContainerRunning(containerName)
 		if err != nil {
 			return fmt.Errorf("failed to check if container is running: %w", err)
@@ -79,13 +85,11 @@ func InitRepocateDefaultContainer() error {
 		return nil
 	}
 
-	// If the container doesn't exist, pull the image
 	color.Yellow("Default container '%s' not found. Pulling image '%s'...", containerName, imageName)
 	if err := PullImage(imageName); err != nil {
 		return fmt.Errorf("failed to pull image '%s': %w", imageName, err)
 	}
 
-	// Create and start the container
 	color.Yellow("Creating and starting container '%s'...", containerName)
 	if err := CreateAndStartContainer(containerName, imageName, []string{"/bin/zsh"}); err != nil {
 		return fmt.Errorf("failed to create and start container '%s': %w", containerName, err)
@@ -129,7 +133,6 @@ func IsContainerRunning(containerName string) (bool, error) {
 
 	ctx := context.Background()
 
-	// Get container details
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
 		return false, err
@@ -154,12 +157,39 @@ func StartContainer(containerName string) error {
 
 	ctx := context.Background()
 
-	// Start the container
 	if err := cli.ContainerStart(ctx, containerName, types.ContainerStartOptions{}); err != nil {
 		return err
 	}
 
 	log.Info(fmt.Sprintf("Container %s started successfully.", containerName))
+	return nil
+}
+
+// CreateAndStartContainer creates and starts a Docker container with a specific name.
+func CreateAndStartContainer(containerName, imageName string, cmd []string) error {
+	cli, err := initializeDockerClient()
+	if err != nil {
+		return err
+	}
+	defer cli.Close()
+
+	ctx := context.Background()
+
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: imageName,
+		Cmd:   cmd,
+	}, nil, nil, nil, containerName)
+	if err != nil {
+		log.Error(fmt.Sprintf("Failed to create container %s: %s", containerName, err))
+		return err
+	}
+
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		log.Error(fmt.Sprintf("Failed to start container %s: %s", containerName, err))
+		return err
+	}
+
+	log.Info(fmt.Sprintf("Container %s created and started successfully with image %s.", containerName, imageName))
 	return nil
 }
 
@@ -178,7 +208,7 @@ func ExecIntoContainer(containerName string) error {
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          true,
-		Cmd:          []string{"/bin/zsh"}, // Make sure this shell exists in the container
+		Cmd:          []string{"/bin/zsh"},
 	}
 
 	execID, err := cli.ContainerExecCreate(ctx, containerName, execConfig)
@@ -186,18 +216,12 @@ func ExecIntoContainer(containerName string) error {
 		return fmt.Errorf("Failed to create exec configuration: %w", err)
 	}
 
-	// Start the exec process
-	execStartCheck := types.ExecStartCheck{
-		Tty: true,
-	}
-
-	resp, err := cli.ContainerExecAttach(ctx, execID.ID, execStartCheck)
+	resp, err := cli.ContainerExecAttach(ctx, execID.ID, types.ExecStartCheck{Tty: true})
 	if err != nil {
 		return fmt.Errorf("Failed to attach to container exec process: %w", err)
 	}
 	defer resp.Close()
 
-	// Copy output to stdout and stderr
 	_, err = io.Copy(os.Stdout, resp.Reader)
 	if err != nil {
 		return fmt.Errorf("Error during exec process copy: %w", err)
@@ -205,4 +229,57 @@ func ExecIntoContainer(containerName string) error {
 
 	log.Info(fmt.Sprintf("Executed into container %s.", containerName))
 	return nil
+}
+
+// StopContainer stops a running Docker container.
+func StopContainer(containerName string) error {
+	cli, err := initializeDockerClient()
+	if err != nil {
+		return err
+	}
+	defer cli.Close()
+
+	ctx := context.Background()
+
+	timeout := 10 // seconds
+	if err := cli.ContainerStop(ctx, containerName, container.StopOptions{Timeout: &timeout}); err != nil {
+		return fmt.Errorf("Failed to stop container %s: %w", containerName, err)
+	}
+
+	log.Info(fmt.Sprintf("Container %s stopped successfully.", containerName))
+	return nil
+}
+
+// RemoveContainer removes a Docker container.
+func RemoveContainer(containerName string) error {
+	cli, err := initializeDockerClient()
+	if err != nil {
+		return err
+	}
+	defer cli.Close()
+
+	ctx := context.Background()
+
+	if err := cli.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{Force: true}); err != nil {
+		return fmt.Errorf("Failed to remove container %s: %w", containerName, err)
+	}
+
+	log.Info(fmt.Sprintf("Container %s removed successfully.", containerName))
+	return nil
+}
+
+// ListContainers lists all Docker containers for this project.
+func ListContainers() ([]types.Container, error) {
+	cli, err := initializeDockerClient()
+	if err != nil {
+		return nil, err
+	}
+	defer cli.Close()
+
+	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	if err != nil {
+		return nil, err
+	}
+
+	return containers, nil
 }
