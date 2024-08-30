@@ -3,6 +3,10 @@ module github.com/cdaprod/repocate
 go 1.19
 
 require (
+	github.com/cdaprod/registry-service
+)
+
+require (
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/docker/docker v23.0.3+incompatible
 	github.com/fatih/color v1.17.0
