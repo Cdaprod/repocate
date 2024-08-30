@@ -13,37 +13,15 @@ import (
 	"github.com/fatih/color"
 )
 
-// handleDefaultContainer handles the default container initialization and startup
-func handleDefaultContainer() {
-    color.Cyan("Initializing and starting the 'repocate-default' container...")
+// GetDefaultContainerName returns the name of the default container
+func GetDefaultContainerName() string {
+	return "repocate-default"
+}
 
-    showProgress("Checking container status...", 100)
-
-    // Initialize the default container if not exists or ensure it is running
-    err := container.InitRepocateDefaultContainer()
-    if err != nil {
-        fmt.Println(color.RedString("Error initializing 'repocate-default' container: %s", err))
-        os.Exit(1)
-    }
-
-    color.Green("Checking status of the 'repocate-default' container...")
-
-    // Check if the container is running
-    isRunning, err := container.IsContainerRunning("repocate-default")
-    if err != nil {
-        fmt.Println(color.RedString("Error checking container status: %s", err))
-        os.Exit(1)
-    }
-
-    if !isRunning {
-        color.Yellow("Container 'repocate-default' is not running. Starting it now...")
-
-        err := container.StartContainer("repocate-default")
-        if err != nil {
-            fmt.Println(color.RedString("Error starting container: %s", err))
-            os.Exit(1)
-        }
-    }
+// GetDefaultImageName returns the name of the default image
+func GetDefaultImageName() string {
+	return "your-default-image:tag" // Replace with your actual default image name
+}
 
     color.Green("'repocate-default' container is ready.")
 // initializeDockerClient initializes the Docker client and handles any errors.
@@ -56,6 +34,17 @@ func initializeDockerClient() (*client.Client, error) {
 	return cli, nil
 }
 
+// initializeDockerClient initializes the Docker client and handles any errors.
+func initializeDockerClient() (*client.Client, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Error(fmt.Sprintf("Failed to create Docker client: %s", err))
+		return nil, err
+	}
+	return cli, nil
+}
+
+// InitRepocateDefaultContainer initializes the 'repocate-default' container if it doesn't exist.
 // InitRepocateDefaultContainer initializes the 'repocate-default' container if it doesn't exist.
 func InitRepocateDefaultContainer() error {
 	containerName := GetDefaultContainerName()
@@ -98,6 +87,7 @@ func InitRepocateDefaultContainer() error {
 	color.Green("Default container '%s' created and started successfully.", containerName)
 	return nil
 }
+
 
 // CheckContainerExists checks if a Docker container with a specific name exists.
 func CheckContainerExists(containerName string) (bool, error) {

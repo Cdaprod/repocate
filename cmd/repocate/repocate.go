@@ -68,8 +68,9 @@ func displayBanner() {
 
 	fmt.Println(color.HiMagentaString("By: David Cannan aka Cdaprod"))
 
-	// Coloring usage and available commands
 	color.Green("\nRepocate allows you to clone repositories, create isolated development environments, and manage them using Docker containers.")
+	color.Green("It now supports dynamic plugin loading and a flexible registry system.")
+
 	color.Blue("\n\nUsage:")
 	fmt.Println("  repocate [command]")
 
@@ -87,12 +88,11 @@ func displayCommands() {
 		name        string
 		description string
 	}{
-		{"start", "Initialize and start the default Repocate container"},
 		{"clone", "Clone a repository"},
 		{"create", "Clone a repo and create/start a development container"},
 		{"enter", "Enter the development container for a specific repo"},
 		{"help", "Show help information"},
-		{"list", "List all repocate containers"},
+		{"list", "List all repocate containers and plugins"},
 		{"rebuild", "Rebuild the development container for a specific repo"},
 		{"stop", "Stop the development container for a specific repo"},
 		{"version", "Show version information"},
