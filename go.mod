@@ -3,7 +3,8 @@ module github.com/cdaprod/repocate
 go 1.19
 
 require (
-	github.com/cdaprod/registry-service
+    // github.com/cdaprod/registry-service v0.1.0 
+	replace github.com/Cdaprod/registry-service => ../registry-service
 )
 
 require (
