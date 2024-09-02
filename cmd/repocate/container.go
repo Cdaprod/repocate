@@ -13,6 +13,12 @@ import (
 	"github.com/cdaprod/repocate/internal/git"
 )
 
+// Helper function to load config and set up logging
+func initializeEnvironment() {
+	config.LoadConfig()
+	log.SetupLogger()
+}
+
 type CommandFactory struct{}
 
 func NewCommandFactory() *CommandFactory {
@@ -38,8 +44,7 @@ var CreateCmd = &cobra.Command{
 
 func runCreateCommand(cmd *cobra.Command, args []string) {
 	repoInput := args[0]
-	config.LoadConfig()
-	log.SetupLogger()
+	initializeEnvironment()
 
 	repoName, err := utils.ExtractRepoName(repoInput)
 	if err != nil {
@@ -57,16 +62,16 @@ func runCreateCommand(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	dockerfilePath := filepath.Join(repoPath, "Dockerfile")
+
 	if repoName == "repocate-default" {
 		log.Info("Using Dockerfile.multiarch for repocate-default.")
 		// Add logic here to ensure the Dockerfile.multiarch is used
+	} else if _, err := os.Stat(dockerfilePath); os.IsNotExist(err) {
+		log.Error("Dockerfile not found in the cloned repository.")
+		return
 	} else {
 		log.Info(fmt.Sprintf("Using Dockerfile for repository %s.", repoName))
-		dockerfilePath := filepath.Join(repoPath, "Dockerfile")
-		if _, err := os.Stat(dockerfilePath); os.IsNotExist(err) {
-			log.Error("Dockerfile not found in the cloned repository.")
-			return
-		}
 	}
 
 	err = cont.InitContainer(config.WorkspaceDir, repoName)
@@ -87,8 +92,7 @@ var CloneCmd = &cobra.Command{
 
 func runCloneCommand(cmd *cobra.Command, args []string) {
 	repoURL := args[0]
-	config.LoadConfig()
-	log.SetupLogger()
+	initializeEnvironment()
 
 	err := git.CloneRepository(config.WorkspaceDir, repoURL)
 	if err != nil {
@@ -108,8 +112,7 @@ var EnterCmd = &cobra.Command{
 
 func runEnterCommand(cmd *cobra.Command, args []string) {
 	repoInput := args[0]
-	config.LoadConfig()
-	log.SetupLogger()
+	initializeEnvironment()
 
 	repoName, err := utils.ExtractRepoName(repoInput)
 	if err != nil {
@@ -132,8 +135,7 @@ var StopCmd = &cobra.Command{
 
 func runStopCommand(cmd *cobra.Command, args []string) {
 	repoInput := args[0]
-	config.LoadConfig()
-	log.SetupLogger()
+	initializeEnvironment()
 
 	repoName, err := utils.ExtractRepoName(repoInput)
 	if err != nil {
@@ -156,8 +158,7 @@ var RebuildCmd = &cobra.Command{
 
 func runRebuildCommand(cmd *cobra.Command, args []string) {
 	repoInput := args[0]
-	config.LoadConfig()
-	log.SetupLogger()
+	initializeEnvironment()
 
 	repoName, err := utils.ExtractRepoName(repoInput)
 	if err != nil {
