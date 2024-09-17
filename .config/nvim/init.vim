@@ -1,4 +1,5 @@
 " ---- Core Settings ----
+set mouse=a
 set nocompatible
 set termguicolors
 set nu rnu
@@ -6,7 +7,8 @@ set completeopt=menuone,noinsert,noselect
 set shortmess+=c
 set expandtab
 set smartindent
-set tabstop=4 softtabstop=4
+set tabstop=4 
+set softtabstop=4
 set cmdheight=2
 set updatetime=50
 set signcolumn=yes
@@ -43,6 +45,7 @@ endif
 call plug#begin('~/.config/nvim/plugged')
 
 " Plugins List
+Plug 'nvim-lualine/lualine.nvim'			" Lualine status line
 Plug 'tpope/vim-sensible'                              " Sensible defaults
 Plug 'sainnhe/edge'                                     " Color schemes
 Plug 'neovim/nvim-lspconfig'                            " LSP
@@ -69,7 +72,6 @@ Plug 'hrsh7th/cmp-path'                                  " Path completions
 Plug 'hrsh7th/cmp-cmdline'                               " Cmdline completions
 Plug 'L3MON4D3/LuaSnip'                                  " Snippet engine
 Plug 'saadparwaiz1/cmp_luasnip'                          " LuaSnip completions
-Plug 'nvim-lualine/lualine.nvim'                          " Lualine status line
 
 call plug#end()
 
@@ -118,8 +120,8 @@ EOF
 " Copilot Configuration
 lua << EOF
 require("copilot").setup({
-  suggestion = { enabled = false },
-  panel = { enabled = false },
+  suggestion = { enabled = true },
+  panel = { enabled = true },
 })
 require("copilot_cmp").setup()
 EOF
@@ -146,6 +148,16 @@ cmp.setup({
   })
 })
 EOF
+
+" Normal mode keybinding for Copilot panel and status
+nnoremap <leader>cp :Copilot panel<CR>
+nnoremap <leader>cs :Copilot status<CR>
+
+" Insert mode keybinding to accept Copilot suggestions
+inoremap <C-Space> copilot#Accept("<CR>")
+
+" Force Copilot suggestion in Insert mode
+inoremap <C-\\> copilot#Accept("<Tab>")
 
 " LSP Configuration
 lua << EOF
@@ -199,6 +211,10 @@ end
 EOF
 
 " ---- Custom Keybindings ----
+
+lua << EOF
+require'nvim-tree'.setup {}
+EOF
 
 " General key mappings
 nnoremap <Space>v :e ~/.config/nvim/init.vim<CR>
@@ -259,3 +275,4 @@ vnoremap <silent> <leader>ds <ESC>:lua require('dap-python').debug_selection()<C
 
 " Clean startup no message windows
 autocmd VimEnter * silent! redraw!
+let $PATH = $PATH . ':/usr/bin'

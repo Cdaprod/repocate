@@ -117,7 +117,7 @@ repocate/
 │   ├── log/
 │   │   └── log.go                 # Logging system for consistent error/info/debug logging
 │   ├── registry/
-│   │   └── registry.go            # Registry for managing images, containers, plugins, and repositories
+│   │   └── registry.go            # Registry for managing images, containers, plugins, and repositories | We have a low level registry made at github.com/Cdaprod/REGS
 │   └── utils/
 │       ├── error.go               # Utility functions for error handling
 │       ├── progress.go            # Utility functions for showing progress bars
