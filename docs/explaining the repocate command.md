@@ -13,7 +13,7 @@ My concern is this: while I appreciate the progress we’ve made—I don’t wan
 ### Our Abstract User Flow is as Follows:
 
 1. **Install Repocate**: The user installs **Repocate** on their system.
-2. **Initial Run of Repocate**: On the first run, **Repocate** creates the default environment and enters it.
+2. **Initial Run of Repocate**: On the first run, **Repocate** creates the default environment.
 3. **Post-Init Runs of Repocate**: Subsequent executions of **Repocate** will either enter the existing environment or perform operations based on user commands.
 4. **Automatic Container Interaction**: If no specific commands are given, **Repocate** intelligently defaults to starting or entering the default container environment.
 
