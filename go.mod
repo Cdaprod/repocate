@@ -2,16 +2,13 @@ module github.com/cdaprod/repocate
 
 go 1.19
 
-require (
-    // github.com/cdaprod/registry-service v0.1.0 
-	replace github.com/Cdaprod/registry-service => ../registry-service
-)
+replace github.com/Cdaprod/registry-service => ../registry-service
 
 require (
-	github.com/cheggaaa/pb/v3 v3.1.5
-	github.com/docker/docker v23.0.3+incompatible
-	github.com/fatih/color v1.17.0
-	github.com/spf13/cobra v1.2.1
+        github.com/cheggaaa/pb/v3 v3.1.5
+        github.com/docker/docker v23.0.3+incompatible
+        github.com/fatih/color v1.17.0
+        github.com/spf13/cobra v1.2.1
 )
 
 require (
